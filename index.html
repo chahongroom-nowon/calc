@@ -2,12 +2,12 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>매장 정산 시스템 - 엑셀 호환성 최종 수정</title>
+    <title>매장 정산 시스템 - 백업 및 초기화 관리 버전</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
         .tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; }
@@ -15,19 +15,21 @@
         .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; color: #64748b; background: #f1f5f9; cursor: pointer; transition: 0.3s; margin-bottom: 20px; }
-        .drop-zone.dragover { background: #e0f2fe; border-color: var(--primary); color: var(--primary); }
-        .form-group { margin-bottom: 15px; position: relative; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
-        .added-item-tag { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; padding: 8px 15px; border-radius: 12px; margin: 6px 0; border: 1px solid #bfdbfe; }
-        .item-info { flex-grow: 1; }
-        .item-remove { color: #ef4444; cursor: pointer; font-weight: bold; padding: 5px; }
+        
+        .drop-zone { border: 3px dashed #cbd5e1; border-radius: 12px; padding: 50px; text-align: center; color: #475569; background: #f8fafc; cursor: pointer; margin-bottom: 20px; }
+        .drop-zone.dragover { background: #e0f2fe; border-color: var(--primary); }
+
+        .admin-controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end; }
+        .btn-backup { background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-reset { background: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        .added-item-tag { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; padding: 12px; border-radius: 12px; margin: 8px 0; border: 1px solid #bfdbfe; }
+        .main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         th, td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 13px; }
-        .staff-group { margin-bottom: 40px; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-        .staff-header { background: #f1f5f9; padding: 15px 20px; border-bottom: 1px solid #cbd5e1; }
-        .main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .del-btn { background: #fee2e2; color: #ef4444; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .staff-group { margin-bottom: 30px; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
+        .staff-header { background: #f1f5f9; padding: 15px 20px; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
@@ -40,36 +42,39 @@
     </div>
 
     <div id="input-tab" class="tab-content active">
-        <h2>📂 엑셀 파일 가져오기 (이미지 형식 최적화)</h2>
-        <div id="drop-zone" class="drop-zone">
-            이미지의 엑셀 파일을 드래그하거나 여기를 클릭하세요. <br>
-            <small>※ 안 될 경우 파일을 열어 <b>.xlsx</b>로 다시 저장 후 시도해 보세요.</small>
-        </div>
+        <h2>📂 엑셀 데이터 가져오기</h2>
+        <div id="drop-zone" class="drop-zone">엑셀 파일을 드래그하거나 클릭하세요.</div>
         <input type="file" id="excel-input" style="display:none;">
 
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #e2e8f0;">
+        <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e2e8f0;">
 
         <h2>✍️ 수동 입력 및 전송 대기</h2>
-        <div class="form-group">
+        <div style="margin-bottom: 15px;">
             <label>직원 이름</label>
-            <input type="text" id="staff-name" placeholder="직원 이름을 입력하세요">
+            <input type="text" id="staff-name" placeholder="직원 이름을 입력하세요" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; box-sizing: border-box;">
         </div>
-        <div class="form-group">
+        <div style="margin-bottom: 15px; position: relative;">
             <label>물건 검색</label>
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="item-search" placeholder="제품명 입력" oninput="searchItem(this.value)" onkeydown="handleKeyDown(event)">
-                <input type="number" id="item-qty-input" value="1" min="1" style="width: 80px;">
+                <input type="text" id="item-search" placeholder="제품명 입력" oninput="searchItem(this.value)" style="flex-grow:1; padding:12px; border:1px solid #cbd5e1; border-radius:8px;">
+                <input type="number" id="item-qty-input" value="1" min="1" style="width: 80px; padding:12px; border:1px solid #cbd5e1; border-radius:8px;">
             </div>
-            <div id="autocomplete-box" style="position:absolute; background:white; border:1px solid #ddd; width:100%; z-index:100; display:none;"></div>
+            <div id="autocomplete-box" style="position:absolute; background:white; border:1px solid #ddd; width:100%; z-index:100; display:none; border-radius:8px;"></div>
         </div>
 
         <div id="selected-items-display"></div>
         <div style="margin: 20px 0; font-size: 1.2rem;"><strong>전송 대기 합계: <span id="total-amount" style="color:var(--primary)">0</span>원</strong></div>
-        <button class="main-btn" onclick="submitLog()">최종 데이터 Firebase 전송</button>
+        <button class="main-btn" onclick="submitLog()">Firebase 최종 전송</button>
     </div>
 
     <div id="history-tab" class="tab-content">
-        <h2>👤 직원별 상세 정산 보고서</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>👤 직원별 상세 정산 보고서</h2>
+            <div class="admin-controls">
+                <button class="btn-backup" onclick="exportToExcel()">📊 엑셀 백업(다운로드)</button>
+                <button class="btn-reset" onclick="resetAllLogs()">⚠️ 데이터 전체 초기화</button>
+            </div>
+        </div>
         <div id="history-container"></div>
     </div>
 
@@ -77,18 +82,12 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
                 <h2>🛠 새 물건 등록</h2>
-                <div class="form-group"><input type="text" id="new-item-name" placeholder="품목명"></div>
-                <div class="form-group"><input type="number" id="new-item-price" placeholder="단가"></div>
-                <div class="form-group">
-                    <select id="new-item-category">
-                        <option value="직원내수">직원내수</option>
-                        <option value="CL">CL</option>
-                        <option value="가발">가발</option>
-                        <option value="블로거ST">블로거ST</option>
-                        <option value="재시술">재시술</option>
-                        <option value="명함">명함</option>
-                    </select>
-                </div>
+                <input type="text" id="new-item-name" placeholder="품목명" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px;">
+                <input type="number" id="new-item-price" placeholder="단가" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px;">
+                <select id="new-item-category" style="width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px;">
+                    <option value="직원내수">직원내수</option><option value="CL">CL</option><option value="가발">가발</option>
+                    <option value="블로거ST">블로거ST</option><option value="재시술">재시술</option><option value="명함">명함</option>
+                </select>
                 <button class="main-btn" onclick="regItem()">물건 등록</button>
             </div>
             <div>
@@ -112,10 +111,15 @@
 
     let masterItems = {};
     let selectedBasket = [];
+    let currentLogs = {}; // 백업을 위해 현재 로그 저장
 
     db.ref('items').on('value', (snap) => { masterItems = snap.val() || {}; renderMasterList(); });
-    db.ref('logs').on('value', (snap) => { renderHistory(snap.val() || {}); });
+    db.ref('logs').on('value', (snap) => { 
+        currentLogs = snap.val() || {}; 
+        renderHistory(currentLogs); 
+    });
 
+    // --- 파일 처리 로직 ---
     const dropZone = document.getElementById('drop-zone');
     const excelInput = document.getElementById('excel-input');
 
@@ -132,40 +136,32 @@
     function handleExcel(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const data = e.target.result;
-            // 워크북을 읽을 때 cellDates 옵션을 추가하여 날짜 형식을 보정
-            const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array', codepage: 949 });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            
-            // 모든 데이터를 2차원 배열로 변환 (헤더 없음)
             const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-            console.log("읽어온 로우 데이터:", rows); // 개발자 도구에서 확인용
             processExcelData(rows);
         };
-        reader.readAsBinaryString(file);
+        reader.readAsArrayBuffer(file);
     }
 
     function processExcelData(rows) {
         let addCount = 0;
-        // 이미지상 24행은 인덱스 23번입니다. 데이터가 더 앞이나 뒤에 있을 수 있으므로 반복 범위를 넓게 잡습니다.
         rows.forEach((row, index) => {
-            if (index < 5) return; // 상단 제목부 제외
-
-            const menuName = String(row[5] || "").trim(); // F열 (인덱스 5)
-            const staffName = String(row[6] || "").trim(); // G열 (인덱스 6)
-
+            if (index < 5) return;
+            const menuName = String(row[5] || "").trim();
+            const staffName = String(row[6] || "").trim();
             if (!menuName || !staffName || menuName === "상세메뉴") return;
 
-            // 등록된 물건 중 이름이 포함되거나 일치하는지 확인
             const matchedKey = Object.keys(masterItems).find(key => 
-                key.trim() === menuName || menuName.includes(key.trim())
+                key.trim().replace(/\s/g, "") === menuName.replace(/\s/g, "")
             );
 
             if (matchedKey) {
                 const item = masterItems[matchedKey];
                 selectedBasket.push({
                     staff: staffName,
-                    name: matchedKey,
+                    itemName: matchedKey,
                     unitPrice: item.price,
                     qty: 1,
                     totalPrice: item.price,
@@ -174,16 +170,41 @@
                 addCount++;
             }
         });
-
         renderBasket();
-        if (addCount === 0) {
-            alert("가져온 데이터가 0개입니다.\n1. 품목 리스트에 제품 이름이 똑같이 등록되어 있는지 확인하세요.\n2. 파일을 .xlsx 형식으로 저장 후 다시 시도해 보세요.");
-        } else {
-            alert(`${addCount}개의 항목을 불러왔습니다.`);
+        alert(addCount + "개를 불러왔습니다.");
+    }
+
+    // --- 백업 및 초기화 로직 (New) ---
+    function exportToExcel() {
+        if (Object.keys(currentLogs).length === 0) return alert("백업할 내역이 없습니다.");
+
+        const data = Object.values(currentLogs).map(log => ({
+            "날짜": new Date(log.timestamp).toLocaleString(),
+            "직원명": log.staff,
+            "분류": log.category,
+            "품목명": log.itemName,
+            "수량": log.qty,
+            "금액": log.price
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "정산내역");
+        
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(workbook, `매장정산백업_${dateStr}.xlsx`);
+    }
+
+    function resetAllLogs() {
+        if (!confirm("⚠️ 주의: 모든 정산 내역이 영구 삭제됩니다.\n이미 엑셀로 백업하셨나요?")) return;
+        if (confirm("정말로 모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+            db.ref('logs').remove()
+                .then(() => alert("모든 내역이 초기화되었습니다. 새로운 달을 시작하세요!"))
+                .catch((err) => alert("오류 발생: " + err.message));
         }
     }
 
-    // --- 수동 입력 및 유틸리티 ---
+    // --- 수동 입력 및 렌더링 ---
     function searchItem(val) {
         const box = document.getElementById('autocomplete-box');
         if(!val) { box.style.display = 'none'; return; }
@@ -197,7 +218,7 @@
     function addItemToBasket(name) {
         const staff = document.getElementById('staff-name').value || "미지정";
         const qty = Number(document.getElementById('item-qty-input').value) || 1;
-        selectedBasket.push({ staff, name, unitPrice: masterItems[name].price, qty, totalPrice: masterItems[name].price * qty, category: masterItems[name].category });
+        selectedBasket.push({ staff, itemName: name, unitPrice: masterItems[name].price, qty, totalPrice: masterItems[name].price * qty, category: masterItems[name].category });
         renderBasket();
         document.getElementById('autocomplete-box').style.display = 'none';
         document.getElementById('item-search').value = '';
@@ -207,14 +228,14 @@
         const display = document.getElementById('selected-items-display');
         display.innerHTML = selectedBasket.map((item, idx) => `
             <div class="added-item-tag">
-                <div class="item-info"><b>[${item.staff}]</b> ${item.name} (${item.unitPrice.toLocaleString()}원)</div>
-                <div class="item-remove" onclick="selectedBasket.splice(${idx}, 1); renderBasket();">✕</div>
+                <div><b>[${item.staff}]</b> ${item.itemName} (${item.unitPrice.toLocaleString()}원)</div>
+                <div style="cursor:pointer; color:red; font-weight:bold;" onclick="selectedBasket.splice(${idx}, 1); renderBasket();">✕</div>
             </div>`).join('');
         document.getElementById('total-amount').innerText = selectedBasket.reduce((s, c) => s + c.totalPrice, 0).toLocaleString();
     }
 
     function submitLog() {
-        if(selectedBasket.length === 0) return alert("전송할 데이터가 없습니다.");
+        if(selectedBasket.length === 0) return alert("데이터가 없습니다.");
         selectedBasket.forEach(i => db.ref('logs').push({ ...i, timestamp: Date.now() }));
         selectedBasket = []; renderBasket(); alert("Firebase 저장 완료!");
     }
@@ -234,9 +255,9 @@
     }
 
     function renderMasterList() {
-        let html = '<table><tr><th>분류</th><th>품목</th><th>단가</th><th>관리</th></tr>';
+        let html = '<table><tr><th>품목</th><th>단가</th><th>삭제</th></tr>';
         Object.entries(masterItems).forEach(([n, d]) => {
-            html += `<tr><td>${d.category}</td><td>${n}</td><td>${d.price.toLocaleString()}</td><td><button class="del-btn" onclick="db.ref('items/${n}').remove()">삭제</button></td></tr>`;
+            html += `<tr><td>${n}</td><td>${d.price.toLocaleString()}</td><td><button class="del-btn" onclick="db.ref('items/${n}').remove()">삭제</button></td></tr>`;
         });
         document.getElementById('master-item-list').innerHTML = html + '</table>';
     }
@@ -251,10 +272,14 @@
         });
         let html = '';
         Object.entries(groups).forEach(([staff, data]) => {
-            html += `<div class="staff-group"><div class="staff-header"><b>👤 ${staff}</b> (합계: ${data.total.toLocaleString()}원)</div>
-            <table>${data.items.map(i => `<tr><td>${i.name}</td><td>${i.price.toLocaleString()}원</td></tr>`).join('')}</table></div>`;
+            html += `<div class="staff-group">
+                <div class="staff-header"><b>👤 ${staff}</b> <span>(합계: ${data.total.toLocaleString()}원)</span></div>
+                <table>
+                    ${data.items.map(i => `<tr><td style="text-align:left; padding-left:20px;">${i.itemName}</td><td style="width:150px;">${(i.price || 0).toLocaleString()}원</td></tr>`).join('')}
+                </table>
+            </div>`;
         });
-        container.innerHTML = html || '<p>내역이 없습니다.</p>';
+        container.innerHTML = html || '<p>내역이 없습니다. 새로운 정산을 시작하세요!</p>';
     }
 </script>
 </body>
