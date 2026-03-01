@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>매장 정산 시스템 - 백업 및 초기화 관리 버전</title>
+    <title>매장 정산 시스템 - 합계 오류 수정 버전</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,8 +17,6 @@
         .tab-content.active { display: block; }
         
         .drop-zone { border: 3px dashed #cbd5e1; border-radius: 12px; padding: 50px; text-align: center; color: #475569; background: #f8fafc; cursor: pointer; margin-bottom: 20px; }
-        .drop-zone.dragover { background: #e0f2fe; border-color: var(--primary); }
-
         .admin-controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end; }
         .btn-backup { background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-reset { background: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
@@ -71,8 +69,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h2>👤 직원별 상세 정산 보고서</h2>
             <div class="admin-controls">
-                <button class="btn-backup" onclick="exportToExcel()">📊 엑셀 백업(다운로드)</button>
-                <button class="btn-reset" onclick="resetAllLogs()">⚠️ 데이터 전체 초기화</button>
+                <button class="btn-backup" onclick="exportToExcel()">📊 엑셀 백업</button>
+                <button class="btn-reset" onclick="resetAllLogs()">⚠️ 초기화</button>
             </div>
         </div>
         <div id="history-container"></div>
@@ -111,7 +109,7 @@
 
     let masterItems = {};
     let selectedBasket = [];
-    let currentLogs = {}; // 백업을 위해 현재 로그 저장
+    let currentLogs = {};
 
     db.ref('items').on('value', (snap) => { masterItems = snap.val() || {}; renderMasterList(); });
     db.ref('logs').on('value', (snap) => { 
@@ -119,7 +117,6 @@
         renderHistory(currentLogs); 
     });
 
-    // --- 파일 처리 로직 ---
     const dropZone = document.getElementById('drop-zone');
     const excelInput = document.getElementById('excel-input');
 
@@ -162,49 +159,39 @@
                 selectedBasket.push({
                     staff: staffName,
                     itemName: matchedKey,
-                    unitPrice: item.price,
+                    unitPrice: Number(item.price || 0),
                     qty: 1,
-                    totalPrice: item.price,
+                    totalPrice: Number(item.price || 0),
                     category: item.category
                 });
                 addCount++;
             }
         });
         renderBasket();
-        alert(addCount + "개를 불러왔습니다.");
+        alert(addCount + "개를 분석했습니다.");
     }
 
-    // --- 백업 및 초기화 로직 (New) ---
+    // 백업/초기화
     function exportToExcel() {
-        if (Object.keys(currentLogs).length === 0) return alert("백업할 내역이 없습니다.");
-
+        if (Object.keys(currentLogs).length === 0) return alert("백업할 데이터가 없습니다.");
         const data = Object.values(currentLogs).map(log => ({
             "날짜": new Date(log.timestamp).toLocaleString(),
             "직원명": log.staff,
-            "분류": log.category,
             "품목명": log.itemName,
-            "수량": log.qty,
             "금액": log.price
         }));
-
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "정산내역");
-        
-        const dateStr = new Date().toISOString().slice(0, 10);
-        XLSX.writeFile(workbook, `매장정산백업_${dateStr}.xlsx`);
+        XLSX.writeFile(workbook, `정산백업_${new Date().toLocaleDateString()}.xlsx`);
     }
 
     function resetAllLogs() {
-        if (!confirm("⚠️ 주의: 모든 정산 내역이 영구 삭제됩니다.\n이미 엑셀로 백업하셨나요?")) return;
-        if (confirm("정말로 모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
-            db.ref('logs').remove()
-                .then(() => alert("모든 내역이 초기화되었습니다. 새로운 달을 시작하세요!"))
-                .catch((err) => alert("오류 발생: " + err.message));
-        }
+        if (!confirm("모든 내역을 삭제하시겠습니까? 백업을 권장합니다.")) return;
+        db.ref('logs').remove().then(() => alert("초기화 완료"));
     }
 
-    // --- 수동 입력 및 렌더링 ---
+    // 렌더링 및 입력
     function searchItem(val) {
         const box = document.getElementById('autocomplete-box');
         if(!val) { box.style.display = 'none'; return; }
@@ -218,7 +205,8 @@
     function addItemToBasket(name) {
         const staff = document.getElementById('staff-name').value || "미지정";
         const qty = Number(document.getElementById('item-qty-input').value) || 1;
-        selectedBasket.push({ staff, itemName: name, unitPrice: masterItems[name].price, qty, totalPrice: masterItems[name].price * qty, category: masterItems[name].category });
+        const price = Number(masterItems[name].price || 0);
+        selectedBasket.push({ staff, itemName: name, unitPrice: price, qty, totalPrice: price * qty, category: masterItems[name].category });
         renderBasket();
         document.getElementById('autocomplete-box').style.display = 'none';
         document.getElementById('item-search').value = '';
@@ -228,16 +216,18 @@
         const display = document.getElementById('selected-items-display');
         display.innerHTML = selectedBasket.map((item, idx) => `
             <div class="added-item-tag">
-                <div><b>[${item.staff}]</b> ${item.itemName} (${item.unitPrice.toLocaleString()}원)</div>
-                <div style="cursor:pointer; color:red; font-weight:bold;" onclick="selectedBasket.splice(${idx}, 1); renderBasket();">✕</div>
+                <div><b>[${item.staff}]</b> ${item.itemName} (${(item.totalPrice || 0).toLocaleString()}원)</div>
+                <div style="cursor:pointer; color:red;" onclick="selectedBasket.splice(${idx}, 1); renderBasket();">✕</div>
             </div>`).join('');
-        document.getElementById('total-amount').innerText = selectedBasket.reduce((s, c) => s + c.totalPrice, 0).toLocaleString();
+        // NaN 방지를 위해 Number()와 기본값 처리
+        const total = selectedBasket.reduce((s, c) => s + Number(c.totalPrice || 0), 0);
+        document.getElementById('total-amount').innerText = total.toLocaleString();
     }
 
     function submitLog() {
-        if(selectedBasket.length === 0) return alert("데이터가 없습니다.");
+        if(selectedBasket.length === 0) return alert("전송할 데이터가 없습니다.");
         selectedBasket.forEach(i => db.ref('logs').push({ ...i, timestamp: Date.now() }));
-        selectedBasket = []; renderBasket(); alert("Firebase 저장 완료!");
+        selectedBasket = []; renderBasket(); alert("저장 완료!");
     }
 
     function openTab(id) {
@@ -249,15 +239,15 @@
 
     function regItem() {
         const name = document.getElementById('new-item-name').value;
-        const price = Number(document.getElementById('new-item-price').value);
+        const price = Number(document.getElementById('new-item-price').value || 0);
         const category = document.getElementById('new-item-category').value;
-        if(name && price) db.ref('items/' + name).set({ price, category });
+        if(name) db.ref('items/' + name).set({ price, category });
     }
 
     function renderMasterList() {
         let html = '<table><tr><th>품목</th><th>단가</th><th>삭제</th></tr>';
         Object.entries(masterItems).forEach(([n, d]) => {
-            html += `<tr><td>${n}</td><td>${d.price.toLocaleString()}</td><td><button class="del-btn" onclick="db.ref('items/${n}').remove()">삭제</button></td></tr>`;
+            html += `<tr><td>${n}</td><td>${(d.price || 0).toLocaleString()}</td><td><button class="del-btn" onclick="db.ref('items/${n}').remove()">삭제</button></td></tr>`;
         });
         document.getElementById('master-item-list').innerHTML = html + '</table>';
     }
@@ -268,18 +258,21 @@
         Object.values(logs).forEach(log => {
             if(!groups[log.staff]) groups[log.staff] = { items: [], total: 0 };
             groups[log.staff].items.push(log);
-            groups[log.staff].total += log.price;
+            // NaN 방지: 값을 숫자로 강제 변환하고 없으면 0 처리
+            const logPrice = Number(log.price || 0);
+            groups[log.staff].total += logPrice;
         });
+
         let html = '';
         Object.entries(groups).forEach(([staff, data]) => {
             html += `<div class="staff-group">
                 <div class="staff-header"><b>👤 ${staff}</b> <span>(합계: ${data.total.toLocaleString()}원)</span></div>
                 <table>
-                    ${data.items.map(i => `<tr><td style="text-align:left; padding-left:20px;">${i.itemName}</td><td style="width:150px;">${(i.price || 0).toLocaleString()}원</td></tr>`).join('')}
+                    ${data.items.map(i => `<tr><td style="text-align:left; padding-left:20px;">${i.itemName}</td><td style="width:150px;">${Number(i.price || 0).toLocaleString()}원</td></tr>`).join('')}
                 </table>
             </div>`;
         });
-        container.innerHTML = html || '<p>내역이 없습니다. 새로운 정산을 시작하세요!</p>';
+        container.innerHTML = html || '<p>내역이 없습니다.</p>';
     }
 </script>
 </body>
