@@ -2,45 +2,31 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>매장 정산 시스템 - 직원별 분류 합산본</title>
+    <title>매장 정산 시스템 - 엑셀 호환성 최종 수정</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
         .tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; }
         .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: #64748b; }
         .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
-
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
+        .drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; color: #64748b; background: #f1f5f9; cursor: pointer; transition: 0.3s; margin-bottom: 20px; }
+        .drop-zone.dragover { background: #e0f2fe; border-color: var(--primary); color: var(--primary); }
         .form-group { margin-bottom: 15px; position: relative; }
         input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
-        
-        .search-flex { display: flex; gap: 10px; }
-        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 85px; background: white; border: 1px solid #ddd; z-index: 100; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; }
-        .autocomplete-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
-        .autocomplete-item.focused { background: #e0f2fe; outline: 2px solid var(--primary); }
-        
         .added-item-tag { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; padding: 8px 15px; border-radius: 12px; margin: 6px 0; border: 1px solid #bfdbfe; }
         .item-info { flex-grow: 1; }
-        .item-qty { font-weight: bold; color: var(--primary); margin: 0 10px; }
         .item-remove { color: #ef4444; cursor: pointer; font-weight: bold; padding: 5px; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 5px; }
         th, td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 13px; }
         .staff-group { margin-bottom: 40px; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
         .staff-header { background: #f1f5f9; padding: 15px 20px; border-bottom: 1px solid #cbd5e1; }
-        .staff-name-title { font-size: 1.2rem; font-weight: bold; color: var(--text); }
-        
-        .staff-summary-table { background: #fff; margin: 10px 0; border: 1px solid #dbeafe; }
-        .staff-summary-table th { background: #eff6ff; color: #1e40af; font-size: 11px; }
-        .staff-summary-table td { font-weight: bold; color: var(--primary); font-size: 14px; }
-
-        .main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .del-btn { background: #fee2e2; color: #ef4444; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
@@ -54,26 +40,32 @@
     </div>
 
     <div id="input-tab" class="tab-content active">
-        <h2>✍️ 내수 정산 입력</h2>
+        <h2>📂 엑셀 파일 가져오기 (이미지 형식 최적화)</h2>
+        <div id="drop-zone" class="drop-zone">
+            이미지의 엑셀 파일을 드래그하거나 여기를 클릭하세요. <br>
+            <small>※ 안 될 경우 파일을 열어 <b>.xlsx</b>로 다시 저장 후 시도해 보세요.</small>
+        </div>
+        <input type="file" id="excel-input" style="display:none;">
+
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #e2e8f0;">
+
+        <h2>✍️ 수동 입력 및 전송 대기</h2>
         <div class="form-group">
             <label>직원 이름</label>
             <input type="text" id="staff-name" placeholder="직원 이름을 입력하세요">
         </div>
-        
         <div class="form-group">
-            <label>물건 검색 및 수량 (방향키 ↑↓)</label>
-            <div class="search-flex">
-                <div style="flex-grow: 1; position: relative;">
-                    <input type="text" id="item-search" placeholder="제품명 입력" oninput="searchItem(this.value)" onkeydown="handleKeyDown(event)">
-                    <div id="autocomplete-box" class="autocomplete-list" style="display:none;"></div>
-                </div>
-                <input type="number" id="item-qty-input" value="1" min="1" style="width: 75px; text-align: center;">
+            <label>물건 검색</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="item-search" placeholder="제품명 입력" oninput="searchItem(this.value)" onkeydown="handleKeyDown(event)">
+                <input type="number" id="item-qty-input" value="1" min="1" style="width: 80px;">
             </div>
+            <div id="autocomplete-box" style="position:absolute; background:white; border:1px solid #ddd; width:100%; z-index:100; display:none;"></div>
         </div>
 
         <div id="selected-items-display"></div>
-        <div style="margin: 20px 0; font-size: 1.2rem;"><strong>총 합계: <span id="total-amount" style="color:var(--primary)">0</span>원</strong></div>
-        <button class="main-btn" onclick="submitLog()">정산 데이터 전송 (Enter)</button>
+        <div style="margin: 20px 0; font-size: 1.2rem;"><strong>전송 대기 합계: <span id="total-amount" style="color:var(--primary)">0</span>원</strong></div>
+        <button class="main-btn" onclick="submitLog()">최종 데이터 Firebase 전송</button>
     </div>
 
     <div id="history-tab" class="tab-content">
@@ -85,8 +77,9 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
                 <h2>🛠 새 물건 등록</h2>
+                <div class="form-group"><input type="text" id="new-item-name" placeholder="품목명"></div>
+                <div class="form-group"><input type="number" id="new-item-price" placeholder="단가"></div>
                 <div class="form-group">
-                    <label>분류</label>
                     <select id="new-item-category">
                         <option value="직원내수">직원내수</option>
                         <option value="CL">CL</option>
@@ -96,13 +89,11 @@
                         <option value="명함">명함</option>
                     </select>
                 </div>
-                <div class="form-group"><input type="text" id="new-item-name" placeholder="품목명"></div>
-                <div class="form-group"><input type="number" id="new-item-price" placeholder="단가"></div>
-                <button class="main-btn" style="background:#475569" onclick="regItem()">물건 등록</button>
+                <button class="main-btn" onclick="regItem()">물건 등록</button>
             </div>
             <div>
                 <h2>📋 등록된 물건 리스트</h2>
-                <div id="master-item-list" style="max-height: 500px; overflow-y: auto;"></div>
+                <div id="master-item-list"></div>
             </div>
         </div>
     </div>
@@ -121,121 +112,147 @@
 
     let masterItems = {};
     let selectedBasket = [];
-    let focusedIndex = -1;
 
     db.ref('items').on('value', (snap) => { masterItems = snap.val() || {}; renderMasterList(); });
     db.ref('logs').on('value', (snap) => { renderHistory(snap.val() || {}); });
 
-    function openTab(id) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
+    const dropZone = document.getElementById('drop-zone');
+    const excelInput = document.getElementById('excel-input');
+
+    dropZone.onclick = () => excelInput.click();
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = "#2563eb"; };
+    dropZone.ondragleave = () => { dropZone.style.borderColor = "#cbd5e1"; };
+    dropZone.ondrop = (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) handleExcel(file);
+    };
+    excelInput.onchange = (e) => { if (e.target.files[0]) handleExcel(e.target.files[0]); };
+
+    function handleExcel(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const data = e.target.result;
+            // 워크북을 읽을 때 cellDates 옵션을 추가하여 날짜 형식을 보정
+            const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            
+            // 모든 데이터를 2차원 배열로 변환 (헤더 없음)
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+            console.log("읽어온 로우 데이터:", rows); // 개발자 도구에서 확인용
+            processExcelData(rows);
+        };
+        reader.readAsBinaryString(file);
     }
 
-    function handleKeyDown(e) {
-        const items = document.querySelectorAll('.autocomplete-item');
-        if (e.key === 'ArrowDown') { focusedIndex = (focusedIndex + 1) % items.length; updateFocus(items); e.preventDefault(); }
-        else if (e.key === 'ArrowUp') { focusedIndex = (focusedIndex - 1 + items.length) % items.length; updateFocus(items); e.preventDefault(); }
-        else if (e.key === 'Enter') { if (focusedIndex > -1) { items[focusedIndex].click(); e.preventDefault(); } }
-    }
+    function processExcelData(rows) {
+        let addCount = 0;
+        // 이미지상 24행은 인덱스 23번입니다. 데이터가 더 앞이나 뒤에 있을 수 있으므로 반복 범위를 넓게 잡습니다.
+        rows.forEach((row, index) => {
+            if (index < 5) return; // 상단 제목부 제외
 
-    function updateFocus(items) {
-        items.forEach((item, idx) => {
-            item.classList.toggle('focused', idx === focusedIndex);
-            if(idx === focusedIndex) item.scrollIntoView({ block: 'nearest' });
+            const menuName = String(row[5] || "").trim(); // F열 (인덱스 5)
+            const staffName = String(row[6] || "").trim(); // G열 (인덱스 6)
+
+            if (!menuName || !staffName || menuName === "상세메뉴") return;
+
+            // 등록된 물건 중 이름이 포함되거나 일치하는지 확인
+            const matchedKey = Object.keys(masterItems).find(key => 
+                key.trim() === menuName || menuName.includes(key.trim())
+            );
+
+            if (matchedKey) {
+                const item = masterItems[matchedKey];
+                selectedBasket.push({
+                    staff: staffName,
+                    name: matchedKey,
+                    unitPrice: item.price,
+                    qty: 1,
+                    totalPrice: item.price,
+                    category: item.category
+                });
+                addCount++;
+            }
         });
+
+        renderBasket();
+        if (addCount === 0) {
+            alert("가져온 데이터가 0개입니다.\n1. 품목 리스트에 제품 이름이 똑같이 등록되어 있는지 확인하세요.\n2. 파일을 .xlsx 형식으로 저장 후 다시 시도해 보세요.");
+        } else {
+            alert(`${addCount}개의 항목을 불러왔습니다.`);
+        }
     }
 
+    // --- 수동 입력 및 유틸리티 ---
     function searchItem(val) {
         const box = document.getElementById('autocomplete-box');
-        focusedIndex = -1;
         if(!val) { box.style.display = 'none'; return; }
-        const matches = Object.keys(masterItems).filter(k => k.toLowerCase().includes(val.toLowerCase()));
+        const matches = Object.keys(masterItems).filter(k => k.includes(val));
         if(matches.length > 0) {
-            box.innerHTML = matches.map(m => `<div class="autocomplete-item" onclick="addItemToBasket('${m}')">${m} (${masterItems[m].price.toLocaleString()}원)</div>`).join('');
+            box.innerHTML = matches.map(m => `<div style="padding:10px; cursor:pointer; border-bottom:1px solid #eee;" onclick="addItemToBasket('${m}')">${m}</div>`).join('');
             box.style.display = 'block';
         } else { box.style.display = 'none'; }
     }
 
     function addItemToBasket(name) {
+        const staff = document.getElementById('staff-name').value || "미지정";
         const qty = Number(document.getElementById('item-qty-input').value) || 1;
-        selectedBasket.push({ name, unitPrice: masterItems[name].price, qty, totalPrice: masterItems[name].price * qty, category: masterItems[name].category });
-        document.getElementById('item-search').value = '';
-        document.getElementById('item-qty-input').value = '1';
-        document.getElementById('autocomplete-box').style.display = 'none';
+        selectedBasket.push({ staff, name, unitPrice: masterItems[name].price, qty, totalPrice: masterItems[name].price * qty, category: masterItems[name].category });
         renderBasket();
-        document.getElementById('item-search').focus();
+        document.getElementById('autocomplete-box').style.display = 'none';
+        document.getElementById('item-search').value = '';
     }
 
     function renderBasket() {
         const display = document.getElementById('selected-items-display');
         display.innerHTML = selectedBasket.map((item, idx) => `
             <div class="added-item-tag">
-                <div class="item-info"><strong>${item.name}</strong> (${item.unitPrice.toLocaleString()}원)</div>
-                <div class="item-qty">x ${item.qty}개</div>
-                <div style="width: 90px; text-align: right;">${item.totalPrice.toLocaleString()}원</div>
-                <div class="item-remove" onclick="removeFromBasket(${idx})">✕</div>
+                <div class="item-info"><b>[${item.staff}]</b> ${item.name} (${item.unitPrice.toLocaleString()}원)</div>
+                <div class="item-remove" onclick="selectedBasket.splice(${idx}, 1); renderBasket();">✕</div>
             </div>`).join('');
         document.getElementById('total-amount').innerText = selectedBasket.reduce((s, c) => s + c.totalPrice, 0).toLocaleString();
     }
 
-    function removeFromBasket(idx) { selectedBasket.splice(idx, 1); renderBasket(); }
+    function submitLog() {
+        if(selectedBasket.length === 0) return alert("전송할 데이터가 없습니다.");
+        selectedBasket.forEach(i => db.ref('logs').push({ ...i, timestamp: Date.now() }));
+        selectedBasket = []; renderBasket(); alert("Firebase 저장 완료!");
+    }
+
+    function openTab(id) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
+    }
 
     function regItem() {
-        const cat = document.getElementById('new-item-category').value;
         const name = document.getElementById('new-item-name').value;
-        const price = document.getElementById('new-item-price').value;
-        if(name && price) db.ref('items/' + name).set({ price: Number(price), category: cat });
-        document.getElementById('new-item-name').value = ''; document.getElementById('new-item-price').value = '';
+        const price = Number(document.getElementById('new-item-price').value);
+        const category = document.getElementById('new-item-category').value;
+        if(name && price) db.ref('items/' + name).set({ price, category });
     }
 
     function renderMasterList() {
-        let html = '<table><thead><tr><th>분류</th><th>품목</th><th>단가</th><th>삭제</th></tr></thead><tbody>';
-        Object.entries(masterItems).forEach(([n, d]) => { html += `<tr><td>${d.category}</td><td>${n}</td><td>${d.price.toLocaleString()}</td><td><button class="del-btn" onclick="deleteMasterItem('${n}')">삭제</button></td></tr>`; });
-        document.getElementById('master-item-list').innerHTML = html + '</tbody></table>';
+        let html = '<table><tr><th>분류</th><th>품목</th><th>단가</th><th>관리</th></tr>';
+        Object.entries(masterItems).forEach(([n, d]) => {
+            html += `<tr><td>${d.category}</td><td>${n}</td><td>${d.price.toLocaleString()}</td><td><button class="del-btn" onclick="db.ref('items/${n}').remove()">삭제</button></td></tr>`;
+        });
+        document.getElementById('master-item-list').innerHTML = html + '</table>';
     }
 
-    function deleteMasterItem(name) { if(confirm('영구 삭제?')) db.ref('items/' + name).remove(); }
-
-    function submitLog() {
-        const staff = document.getElementById('staff-name').value;
-        if(!staff || selectedBasket.length === 0) return alert("입력 확인!");
-        selectedBasket.forEach(item => { db.ref('logs').push({ staff, itemName: item.name, qty: item.qty, price: item.totalPrice, category: item.category, timestamp: Date.now() }); });
-        selectedBasket = []; renderBasket(); document.getElementById('staff-name').value = ''; alert("전송 완료");
-    }
-
-    // [최종 수정] 내역 보기: 직원 섹션 내부에 분류별 요약 추가
     function renderHistory(logs) {
         const container = document.getElementById('history-container');
-        const staffGroups = {};
-        const categories = ["직원내수", "CL", "가발", "블로거ST", "재시술", "명함"];
-
-        Object.entries(logs).forEach(([id, log]) => {
-            if (!staffGroups[log.staff]) {
-                staffGroups[log.staff] = { items: [], catTotals: { "직원내수": 0, "CL": 0, "가발": 0, "블로거ST": 0, "재시술": 0, "명함": 0 }, total: 0 };
-            }
-            staffGroups[log.staff].items.push(log);
-            staffGroups[log.staff].catTotals[log.category] += log.price;
-            staffGroups[log.staff].total += log.price;
+        const groups = {};
+        Object.values(logs).forEach(log => {
+            if(!groups[log.staff]) groups[log.staff] = { items: [], total: 0 };
+            groups[log.staff].items.push(log);
+            groups[log.staff].total += log.price;
         });
-
         let html = '';
-        Object.entries(staffGroups).forEach(([staff, data]) => {
-            html += `
-            <div class="staff-group">
-                <div class="staff-header">
-                    <div class="staff-name-title">👤 ${staff}님 정산 요약</div>
-                    <table class="staff-summary-table">
-                        <tr>${categories.map(c => `<th>${c}</th>`).join('')} <th style="background:#2563eb; color:#fff;">총 합계</th></tr>
-                        <tr>${categories.map(c => `<td>${data.catTotals[c].toLocaleString()}</td>`).join('')} <td>${data.total.toLocaleString()}원</td></tr>
-                    </table>
-                </div>
-                <table>
-                    <thead><tr><th>분류</th><th>품목</th><th>수량</th><th>금액</th></tr></thead>
-                    <tbody>${data.items.map(i => `<tr><td>${i.category}</td><td>${i.itemName}</td><td>${i.qty || 1}</td><td>${i.price.toLocaleString()}원</td></tr>`).join('')}</tbody>
-                </table>
-            </div>`;
+        Object.entries(groups).forEach(([staff, data]) => {
+            html += `<div class="staff-group"><div class="staff-header"><b>👤 ${staff}</b> (합계: ${data.total.toLocaleString()}원)</div>
+            <table>${data.items.map(i => `<tr><td>${i.name}</td><td>${i.price.toLocaleString()}원</td></tr>`).join('')}</table></div>`;
         });
         container.innerHTML = html || '<p>내역이 없습니다.</p>';
     }
