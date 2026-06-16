@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#ffffff">
-<title>게임머니 트래커 PRO</title>
+<title>게임머니 트래커</title>
 <style>
 :root {
   --green: #1D9E75;
@@ -67,6 +67,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── 레이아웃 ── */
 .app {
   max-width: 480px;
   margin: 0 auto;
@@ -76,53 +77,27 @@ html, body {
   background: var(--gray-50);
 }
 
-/* ── 상단 헤더 및 캐릭터 선택 ── */
-.header-area {
-  background: var(--gray-50);
-  border-bottom: 1px solid var(--gray-200);
-  padding: 12px 16px 8px;
-  padding-top: calc(12px + env(safe-area-inset-top, 0px));
-}
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.header-top h1 { font-size: 17px; font-weight: 600; color: var(--gray-900); }
-
-.char-selector-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.char-select {
-  padding: 6px 10px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--gray-300);
-  background: #fff;
-  color: var(--gray-900);
-}
-@media (prefers-color-scheme: dark) { .char-select { background: var(--gray-200); } }
-.btn-char-manage {
-  background: var(--gray-200);
-  border: none;
-  padding: 6px 8px;
-  font-size: 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  color: var(--gray-700);
-}
-
+/* ── 상단 탭바 ── */
 .topbar {
   position: sticky;
   top: 0;
   z-index: 100;
   background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 12px 16px 0;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
 }
-.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--gray-200); }
+.topbar h1 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 10px;
+}
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--gray-200);
+}
 .tab {
   flex: 1;
   padding: 10px;
@@ -147,10 +122,12 @@ html, body {
   border-radius: 2px 2px 0 0;
 }
 
+/* ── 페이지 ── */
 .page { display: none; flex: 1; overflow-y: auto; }
 .page.active { display: block; }
 .scroll-content { padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); }
 
+/* ── 카드 ── */
 .card {
   background: #fff;
   border-radius: var(--radius-lg);
@@ -158,7 +135,9 @@ html, body {
   padding: 16px;
   margin-bottom: 12px;
 }
-@media (prefers-color-scheme: dark) { .card { background: var(--gray-200); } }
+@media (prefers-color-scheme: dark) {
+  .card { background: var(--gray-200); }
+}
 .card-label {
   font-size: 11px;
   font-weight: 600;
@@ -168,6 +147,7 @@ html, body {
   margin-bottom: 10px;
 }
 
+/* ── 초기설정 ── */
 .init-row { display: flex; gap: 10px; }
 .init-row .field { flex: 1; }
 .field label { font-size: 13px; color: var(--gray-600); display: block; margin-bottom: 5px; }
@@ -180,9 +160,11 @@ html, body {
   background: var(--gray-50);
   color: var(--gray-900);
   outline: none;
+  transition: border-color 0.15s;
 }
 .field input:focus { border-color: var(--green); }
 
+/* ── 잔액 입력 ── */
 .balance-card { text-align: center; }
 .balance-label { font-size: 13px; color: var(--gray-600); margin-bottom: 10px; }
 .balance-input {
@@ -196,10 +178,14 @@ html, body {
   background: var(--gray-50);
   color: var(--gray-900);
   outline: none;
+  transition: border-color 0.2s;
 }
 .balance-input:focus { border-color: var(--green); }
-@media (prefers-color-scheme: dark) { .balance-input { background: var(--gray-300); } }
+@media (prefers-color-scheme: dark) {
+  .balance-input { background: var(--gray-300); }
+}
 
+/* ── 버튼들 ── */
 .btn-checkpoint {
   width: 100%;
   padding: 18px;
@@ -216,7 +202,10 @@ html, body {
   justify-content: center;
   gap: 8px;
   box-shadow: 0 4px 14px rgba(29,158,117,0.35);
+  transition: transform 0.1s, opacity 0.1s;
+  -webkit-appearance: none;
 }
+.btn-checkpoint:active { transform: scale(0.97); opacity: 0.9; }
 
 .btn-close {
   width: 100%;
@@ -232,6 +221,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition: background 0.15s;
   margin-top: 4px;
 }
 .btn-close:active { background: var(--red-light); }
@@ -251,9 +241,12 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  transition: background 0.12s;
 }
+.btn-sm:active { background: var(--gray-200); }
 .btn-sm.danger { color: var(--red-dark); border-color: #F5C4B3; background: var(--red-light); }
 
+/* ── 통계 카드들 ── */
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
 .stat {
   background: #fff;
@@ -268,6 +261,7 @@ html, body {
 .stat-val.pos { color: var(--green-dark); }
 .stat-val.neg { color: var(--red-dark); }
 
+/* ── 차트 (Canvas 구조) ── */
 .chart-wrap { margin-bottom: 12px; }
 .chart-inner {
   background: #fff;
@@ -276,15 +270,11 @@ html, body {
   padding: 14px 14px 10px;
 }
 @media (prefers-color-scheme: dark) { .chart-inner { background: var(--gray-200); } }
-.chart-title { font-size: 11px; font-weight: 600; color: var(--gray-500); margin-bottom: 10px; }
-.bars { display: flex; align-items: flex-end; gap: 5px; height: 72px; }
-.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 30px; }
-.bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; position: relative; }
-.bar.pos { background: var(--green); }
-.bar.neg { background: var(--red); }
-.bar.skip { background: var(--gray-300); }
-.bar-lbl { font-size: 9px; color: var(--gray-500); white-space: nowrap; }
+.chart-title { font-size: 11px; font-weight: 600; color: var(--gray-500); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; }
+.chart-container { width: 100%; position: relative; }
+.chart-canvas { width: 100%; height: 140px; display: block; }
 
+/* ── 테이블 ── */
 .table-wrap {
   background: #fff;
   border-radius: var(--radius-lg);
@@ -301,113 +291,223 @@ th {
   padding: 9px 10px;
   text-align: right;
   font-size: 11px;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
 }
 th:first-child { text-align: left; }
-td { padding: 11px 10px; text-align: right; border-top: 1px solid var(--gray-100); color: var(--gray-800); }
+td {
+  padding: 11px 10px;
+  text-align: right;
+  border-top: 1px solid var(--gray-100);
+  color: var(--gray-800);
+  font-size: 13px;
+}
 td:first-child { text-align: left; color: var(--gray-600); }
 tr.neg td { color: var(--red-dark); background: var(--red-light); }
 tr.skip td { color: var(--gray-500); background: var(--gray-50); font-size: 12px; }
-.badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 99px; margin-left: 4px; }
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 99px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
 .badge-skip { background: var(--gray-200); color: var(--gray-600); }
 .badge-neg { background: #F5C4B3; color: var(--red-dark); }
-.empty-row td { text-align: center; padding: 32px 16px; color: var(--gray-500); }
+.empty-row td {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--gray-500);
+  font-size: 14px;
+}
 
-.summary-card { background: var(--green); border-radius: var(--radius-lg); padding: 20px 16px; margin-bottom: 12px; color: #fff; }
-.summary-title { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
-.summary-val { font-size: 28px; font-weight: 700; }
-.summary-sub { font-size: 13px; opacity: 0.75; margin-top: 6px; }
+/* ── 히스토리 ── */
+.summary-card {
+  background: var(--green);
+  border-radius: var(--radius-lg);
+  padding: 20px 16px;
+  margin-bottom: 12px;
+  color: #fff;
+}
+.summary-card .summary-title { font-size: 12px; font-weight: 500; opacity: 0.8; margin-bottom: 4px; }
+.summary-card .summary-val { font-size: 28px; font-weight: 700; }
+.summary-card .summary-sub { font-size: 13px; opacity: 0.75; margin-top: 6px; }
 .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
 .summary-item { background: rgba(255,255,255,0.15); border-radius: var(--radius-sm); padding: 10px 12px; }
 .summary-item-label { font-size: 11px; opacity: 0.75; margin-bottom: 3px; }
 .summary-item-val { font-size: 16px; font-weight: 600; }
 
-.day-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 16px; margin-bottom: 10px; }
+.day-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
 @media (prefers-color-scheme: dark) { .day-card { background: var(--gray-200); } }
-.day-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.day-card:active { transform: scale(0.98); }
+.day-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
 .day-date { font-size: 15px; font-weight: 600; color: var(--gray-900); }
 .day-profit { font-size: 18px; font-weight: 700; }
-.day-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.day-meta { font-size: 12px; color: var(--gray-500); }
+.day-bar-wrap { height: 3px; background: var(--gray-200); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.day-bar { height: 3px; border-radius: 2px; }
+.day-bar.pos { background: var(--green); }
+.day-bar.neg { background: var(--red); }
+.arrow { color: var(--gray-400); font-size: 18px; margin-top: 2px; }
 
-.detail-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 50; }
-.back-btn { background: var(--gray-100); border: none; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 14px; color: var(--gray-700); cursor: pointer; }
+/* ── 상세 뷰 ── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.back-btn {
+  background: var(--gray-100);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-btn:active { background: var(--gray-200); }
+.detail-title { font-size: 16px; font-weight: 600; color: var(--gray-900); }
 
-/* 모달 스타일 */
-.modal {
-  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
-}
-.modal-content {
-  background: #fff; max-width: 400px; width: 90%; border-radius: var(--radius-lg); padding: 20px;
-  box-shadow: var(--shadow-md);
-}
-@media (prefers-color-scheme: dark) { .modal-content { background: var(--gray-800); } }
-.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
-.char-list-item {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid var(--gray-200);
-}
-.char-list-item span { font-weight: 500; }
-.char-actions { display: flex; gap: 4px; }
-.btn-mini { padding: 4px 8px; font-size: 11px; border: none; border-radius: var(--radius-sm); cursor: pointer; }
-.btn-mini.edit { background: var(--gray-200); color: var(--gray-800); }
-.btn-mini.del { background: var(--red-light); color: var(--red-dark); }
+.no-data { text-align: center; padding: 60px 20px; }
+.no-data-icon { font-size: 48px; margin-bottom: 12px; }
+.no-data-text { font-size: 15px; color: var(--gray-600); line-height: 1.6; }
+
+/* ── 애니메이션 ── */
+@keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(0.95)} 100%{transform:scale(1)} }
+.pop { animation: pop 0.2s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.slide-in { animation: slideIn 0.2s ease; }
+
+/* ── 모바일 숫자 키패드 힌트 ── */
+input[type=number] { -moz-appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+  // 🛠️ 본인의 Firebase 설정값으로 채워주세요
+  const firebaseConfig = {
+  apiKey: "AIzaSyCCGI5gtzwYM9vyRMS5qhTaNsFZ8rZDk-o",
+  authDomain: "clac-efaab.firebaseapp.com",
+  databaseURL: "https://clac-efaab-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "clac-efaab",
+  storageBucket: "clac-efaab.firebasestorage.app",
+  messagingSenderId: "94106141769",
+  appId: "1:94106141769:web:5391ba91c0300bf652ab98",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // 원격 데이터 업로드 함수 전역 바인딩
+  window.saveToFirebase = function() {
+    set(ref(db, 'tracker_data/'), {
+      records: window.records,
+      history: window.history
+    }).catch(err => console.error("Firebase 동기화 실패:", err));
+  };
+
+  // 앱 시작 시 Firebase 데이터 다운로드 및 수령
+  const dbRef = ref(db);
+  get(child(dbRef, 'tracker_data/')).then((snapshot) => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      window.records = data.records || [];
+      window.history = data.history || [];
+      localStorage.setItem('gm_records', JSON.stringify(window.records));
+      localStorage.setItem('gm_history', JSON.stringify(window.history));
+      window.render();
+    }
+  }).catch((error) => {
+    console.error("Firebase 로드 실패, 로컬 데이터 사용:", error);
+  });
+</script>
+
 </head>
 <body>
 <div class="app">
 
-  <div class="header-area">
-    <div class="header-top">
-      <h1>🎮 머니 트래커</h1>
-      <div class="char-selector-wrap">
-        <select id="charSelect" class="char-select" onchange="switchCharacter(this.value)">
-        </select>
-        <button class="btn-char-manage" onclick="openCharModal()">⚙️ 관리</button>
-      </div>
-    </div>
-  </div>
-
   <div class="topbar">
+    <h1>🎮 게임머니 트래커</h1>
     <div class="tabs">
-      <button class="tab active" id="tab-record" onclick="showPage('record')">📍 캐릭터 기록</button>
-      <button class="tab" id="tab-total" onclick="showPage('total')">📊 전 캐릭터 정산</button>
-      <button class="tab" id="tab-history" onclick="showPage('history')">📅 히스토리</button>
+      <button class="tab active" onclick="showPage('record')">📍 기록</button>
+      <button class="tab" onclick="showPage('history')">📅 히스토리</button>
     </div>
   </div>
 
   <div class="page active" id="page-record">
     <div class="scroll-content">
+
       <div class="card">
         <div class="card-label">초기 설정</div>
         <div class="init-row">
           <div class="field">
             <label>시작 시간</label>
-            <input type="time" id="startTime" value="10:10" onchange="updateLiveConfig()">
+            <input type="time" id="startTime" value="10:10">
           </div>
           <div class="field">
             <label>초기 보유 금액</label>
-            <input type="number" id="initBalance" placeholder="43605" inputmode="numeric" onchange="updateLiveConfig()">
+            <input type="number" id="initBalance" placeholder="43605" inputmode="numeric">
           </div>
         </div>
       </div>
 
       <div class="card balance-card">
         <div class="balance-label">현재 보유 금액</div>
-        <input type="number" id="curBalance" class="balance-input" placeholder="0" inputmode="numeric" onkeydown="if(event.key==='Enter')addCheckpoint()">
+        <input type="number" id="curBalance" class="balance-input"
+          placeholder="0" inputmode="numeric"
+          onkeydown="if(event.key==='Enter')addCheckpoint()">
       </div>
 
-      <button class="btn-checkpoint" id="checkBtn" onclick="addCheckpoint()">📍 체크포인트 찍기</button>
+      <button class="btn-checkpoint" id="checkBtn" onclick="addCheckpoint()">
+        📍 체크포인트 찍기
+      </button>
 
       <div class="stats-grid">
-        <div class="stat"><div class="stat-label">플레이</div><div class="stat-val" id="statTime">0분</div></div>
-        <div class="stat"><div class="stat-label">수익</div><div class="stat-val" id="statProfit">0</div></div>
-        <div class="stat"><div class="stat-label">시간당</div><div class="stat-val" id="statHourly">0</div></div>
+        <div class="stat">
+          <div class="stat-label">플레이</div>
+          <div class="stat-val" id="statTime">0분</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">총 수익</div>
+          <div class="stat-val" id="statProfit">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">시간당</div>
+          <div class="stat-val" id="statHourly">0</div>
+        </div>
       </div>
 
       <div class="chart-wrap">
         <div class="chart-inner">
-          <div class="chart-title">구간별 효율 흐름 (시간당 수익 기준)</div>
-          <div class="bars" id="chartBars"></div>
+          <div class="chart-title">구간별 효율 흐름 (시간당 수익)</div>
+          <div class="chart-container" id="chartWrapper">
+            <canvas id="recordChart" class="chart-canvas"></canvas>
+          </div>
         </div>
       </div>
 
@@ -419,33 +519,22 @@ tr.skip td { color: var(--gray-500); background: var(--gray-50); font-size: 12px
 
       <div class="table-wrap">
         <table>
-          <thead><tr><th>구간</th><th>분</th><th>수익</th><th>시간당</th></tr></thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="page" id="page-total">
-    <div class="scroll-content">
-      <div class="card" style="background:var(--green); color:#fff; text-align:center; padding:24px 16px;">
-        <div style="font-size:13px; opacity:0.9; margin-bottom:6px;">금일 가동중인 전체 캐릭터 총합 수익</div>
-        <div id="allCharTotalProfit" style="font-size:32px; font-weight:800;">0</div>
-        <div id="allCharTotalMins" style="font-size:14px; opacity:0.8; margin-top:6px;">총 플레이 타임: 0분</div>
-      </div>
-
-      <div class="card-label" style="margin-top:16px;">캐릭터별 실시간 요약 현황</div>
-      <div class="table-wrap">
-        <table>
           <thead>
-            <tr><th>닉네임</th><th>플레이</th><th>당일수익</th><th>시간당</th></tr>
+            <tr>
+              <th>구간</th>
+              <th>분</th>
+              <th>수익</th>
+              <th>시간당</th>
+            </tr>
           </thead>
-          <tbody id="totalSummaryBbody">
+          <tbody id="tbody">
+            <tr class="empty-row"><td colspan="4">체크포인트를 찍으면 여기에 기록돼요</td></tr>
           </tbody>
         </table>
       </div>
 
-      <button class="btn-close" style="margin-top:20px; font-size:16px; padding:18px;" onclick="closeAllDays()">🏁 전 캐릭터 일괄 마감하기</button>
+      <button class="btn-close" onclick="closeDay()">🏁 오늘 마감하기</button>
+
     </div>
   </div>
 
@@ -456,46 +545,14 @@ tr.skip td { color: var(--gray-500); background: var(--gray-50); font-size: 12px
 
 </div>
 
-<div id="charModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-title">캐릭터 닉네임 관리</div>
-    <div style="display:flex; gap:6px; margin-bottom:12px;">
-      <input type="text" id="newCharName" placeholder="새 닉네임 입력" style="flex:1; padding:8px; border:1px solid var(--gray-300); border-radius:var(--radius-sm);">
-      <button class="btn-sm" onclick="addNewCharacter()" style="margin-bottom:0; flex:none; padding:0 12px;">추가</button>
-    </div>
-    <div id="modalCharList" style="max-height:200px; overflow-y:auto; margin-bottom:16px;"></div>
-    <button class="btn-sm" onclick="closeCharModal()" style="width:100%;">닫기</button>
-  </div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-
 <script>
-// ── Firebase 설정 및 초기화 ──
-const firebaseConfig = {
-  apiKey: "AIzaSyCCGI5gtzwYM9vyRMS5qhTaNsFZ8rZDk-o",
-  authDomain: "clac-efaab.firebaseapp.com",
-  databaseURL: "https://clac-efaab-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "clac-efaab",
-  storageBucket: "clac-efaab.firebasestorage.app",
-  messagingSenderId: "94106141769",
-  appId: "1:94106141769:web:5391ba91c0300bf652ab98",
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let globalState = {
-  characters: ["기본캐릭터"],
-  selectedChar: "기본캐릭터",
-  records: {},  
-  history: [],  
-  configs: {}   
-};
+// Firebase 스크립트 모듈과 변수 동기화를 위해 전역 스코프 할당
+window.records = JSON.parse(localStorage.getItem('gm_records') || '[]');
+window.history = JSON.parse(localStorage.getItem('gm_history') || '[]');
 
 const $ = id => document.getElementById(id);
-function fmt(n) { return Math.round(n || 0).toLocaleString('ko-KR'); }
+
+function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
 function today() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -505,413 +562,390 @@ function nowTime() {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 function timeDiffMin(t1, t2) {
-  if(!t1 || !t2) return 0;
   const [h1, m1] = t1.split(':').map(Number);
   const [h2, m2] = t2.split(':').map(Number);
   let d = (h2*60+m2) - (h1*60+m1);
   return d <= 0 ? d + 1440 : d;
 }
-
-db.ref('tracker_state').on('value', (snapshot) => {
-  const data = snapshot.val();
-  if (data) {
-    globalState.characters = data.characters || ["기본캐릭터"];
-    globalState.selectedChar = data.selectedChar || globalState.characters[0];
-    globalState.records = data.records || {};
-    globalState.history = data.history || [];
-    globalState.configs = data.configs || {};
-    
-    if(!globalState.characters.includes(globalState.selectedChar)) {
-      globalState.selectedChar = globalState.characters[0];
-    }
-    
-    renderCharSelector();
-    syncUIFields();
-    render();
-  } else {
-    saveState();
-  }
-});
-
-function saveState() {
-  db.ref('tracker_state').set(globalState);
+function prevTime() {
+  return window.records.length === 0
+    ? ($('startTime').value || nowTime())
+    : window.records[window.records.length-1].endTime;
 }
-
-function syncUIFields() {
-  const char = globalState.selectedChar;
-  const cfg = globalState.configs[char] || { startTime: "10:10", initBalance: "" };
-  $('startTime').value = cfg.startTime || "10:10";
-  $('initBalance').value = cfg.initBalance || "";
-}
-
-function updateLiveConfig() {
-  const char = globalState.selectedChar;
-  if(!globalState.configs[char]) globalState.configs[char] = {};
-  globalState.configs[char].startTime = $('startTime').value;
-  globalState.configs[char].initBalance = parseInt($('initBalance').value) || 0;
-  saveState();
-}
-
-function renderCharSelector() {
-  const select = $('charSelect');
-  select.innerHTML = globalState.characters.map(c => `<option value="${c}" ${c === globalState.selectedChar ? 'selected' : ''}>${c}</option>`).join('');
-}
-
-function switchCharacter(charName) {
-  globalState.selectedChar = charName;
-  saveState();
-}
-
-function openCharModal() {
-  $('charModal').style.display = 'flex';
-  renderModalCharList();
-}
-
-function closeCharModal() {
-  $('charModal').style.display = 'none';
-}
-
-function renderModalCharList() {
-  const listContainer = $('modalCharList');
-  listContainer.innerHTML = globalState.characters.map(c => `
-    <div class="char-list-item">
-      <span>${c}</span>
-      <div class="char-actions">
-        <button class="btn-mini edit" onclick="editCharacterName('${c}')">수정</button>
-        <button class="btn-mini del" onclick="deleteCharacter('${c}')">삭제</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function addNewCharacter() {
-  const name = $('newCharName').value.trim();
-  if(!name) return;
-  if(globalState.characters.includes(name)) { alert('이미 존재하는 닉네임입니다.'); return; }
-  globalState.characters.push(name);
-  $('newCharName').value = '';
-  saveState();
-  renderModalCharList();
-}
-
-function editCharacterName(oldName) {
-  const newName = prompt(`[${oldName}]의 변경할 새 닉네임을 입력하세요:`, oldName);
-  if(!newName || !newName.trim() || oldName === newName.trim()) return;
-  const trimmed = newName.trim();
-  if(globalState.characters.includes(trimmed)) { alert('이미 존재하는 닉네임입니다.'); return; }
-  
-  const idx = globalState.characters.indexOf(oldName);
-  if(idx !== -1) globalState.characters[idx] = trimmed;
-  if(globalState.records[oldName]) { globalState.records[trimmed] = globalState.records[oldName]; delete globalState.records[oldName]; }
-  if(globalState.configs[oldName]) { globalState.configs[trimmed] = globalState.configs[oldName]; delete globalState.configs[oldName]; }
-  if(globalState.selectedChar === oldName) globalState.selectedChar = trimmed;
-  
-  saveState();
-  renderModalCharList();
-}
-
-function deleteCharacter(charName) {
-  if(globalState.characters.length <= 1) { alert('최소 하나의 캐릭터 닉네임은 존재해야 합니다.'); return; }
-  if(!confirm(`[${charName}] 캐릭터와 당일 데이터가 유실됩니다. 삭제할까요?`)) return;
-  
-  globalState.characters = globalState.characters.filter(c => c !== charName);
-  delete globalState.records[charName];
-  delete globalState.configs[charName];
-  if(globalState.selectedChar === charName) globalState.selectedChar = globalState.characters[0];
-  
-  saveState();
-  renderModalCharList();
-}
-
-function getActiveCharRecords() {
-  return globalState.records[globalState.selectedChar] || [];
+function prevBalance() {
+  return window.records.length === 0
+    ? (parseInt($('initBalance').value) || 0)
+    : window.records[window.records.length-1].balance;
 }
 
 function addCheckpoint() {
   const curBal = parseInt($('curBalance').value);
-  if (isNaN(curBal)) { $('curBalance').focus(); return; }
-  
-  const char = globalState.selectedChar;
-  const recs = getActiveCharRecords();
+  if (!curBal || isNaN(curBal)) { $('curBalance').focus(); return; }
   const endTime = nowTime();
-  
-  const cfg = globalState.configs[char] || {};
-  const startT = recs.length === 0 ? (cfg.startTime || nowTime()) : recs[recs.length-1].endTime;
-  const prevBal = recs.length === 0 ? (cfg.initBalance || 0) : recs[recs.length-1].balance;
-  
+  const startT = prevTime();
   const mins = timeDiffMin(startT, endTime);
-  const profit = curBal - prevBal;
+  const profit = curBal - prevBalance();
   const hourly = mins > 0 ? Math.round((profit / mins) * 60) : 0;
-  const skip = hourly > 400000; 
-
-  if(!globalState.records[char]) globalState.records[char] = [];
-  globalState.records[char].push({
-    no: recs.length + 1, startTime: startT, endTime, mins, profit, balance: curBal, hourly, skip
-  });
+  const skip = hourly > 40000;
   
+  window.records.push({ no: window.records.length+1, startTime: startT, endTime, mins, profit, balance: curBal, hourly, skip });
+  localStorage.setItem('gm_records', JSON.stringify(window.records));
+  
+  // Firebase 동기화 트리거
+  if (typeof window.saveToFirebase === 'function') window.saveToFirebase();
+
   $('curBalance').value = '';
   $('curBalance').focus();
-  saveState();
+  $('checkBtn').classList.add('pop');
+  setTimeout(() => $('checkBtn').classList.remove('pop'), 200);
+  render();
 }
 
 function render() {
-  const recs = getActiveCharRecords();
-  const active = recs.filter(r => !r.skip);
+  const active = window.records.filter(r => !r.skip);
   const totalMins = active.reduce((s,r) => s+r.mins, 0);
   const totalProfit = active.reduce((s,r) => s+r.profit, 0);
   const hourly = totalMins > 0 ? Math.round((totalProfit/totalMins)*60) : 0;
 
   $('statTime').textContent = totalMins + '분';
-  $('statProfit').textContent = fmt(totalProfit);
-  $('statProfit').className = 'stat-val ' + (totalProfit >= 0 ? 'pos' : 'neg');
-  $('statHourly').textContent = fmt(hourly);
-  $('statHourly').className = 'stat-val ' + (hourly >= 0 ? 'pos' : 'neg');
+  const sp = $('statProfit');
+  sp.textContent = fmt(totalProfit);
+  sp.className = 'stat-val ' + (totalProfit >= 0 ? 'pos' : 'neg');
+  const sh = $('statHourly');
+  sh.textContent = fmt(hourly);
+  sh.className = 'stat-val ' + (hourly >= 0 ? 'pos' : 'neg');
 
-  renderHourlyChart(recs);
+  // Y축 금액선이 포함된 꺾은선 차트 드로잉 호출
+  drawCanvasLineChart('recordChart', window.records);
 
   const tbody = $('tbody');
-  if (recs.length === 0) {
+  if (window.records.length === 0) {
     tbody.innerHTML = '<tr class="empty-row"><td colspan="4">체크포인트를 찍으면 여기에 기록돼요</td></tr>';
-  } else {
-    tbody.innerHTML = [...recs].reverse().map(r => {
-      const cls = r.skip ? 'skip' : r.profit < 0 ? 'neg' : '';
-      const badge = r.skip ? '<span class="badge badge-skip">아이템판매</span>' : r.profit < 0 ? '<span class="badge badge-neg">손실</span>' : '';
-      return `<tr class="${cls}">
-        <td>${r.startTime}→${r.endTime}${badge}</td>
-        <td>${r.mins}</td>
-        <td>${r.skip ? '-' : (r.profit >= 0 ? '+' : '') + fmt(r.profit)}</td>
-        <td>${r.skip ? '-' : fmt(r.hourly)}</td>
-      </tr>`;
-    }).join('');
-  }
-
-  renderTotalSummaryPage();
-}
-
-// 🔥 [핵심 수정] 금액이 아닌 '시간당 효율(hourly)' 기준으로 차트 렌더링하도록 변경
-function renderHourlyChart(recs) {
-  const bars = $('chartBars');
-  if (!recs.length) {
-    bars.innerHTML = '<div style="width:100%;text-align:center;color:var(--gray-400);font-size:13px;align-self:center">기록 없음</div>';
     return;
   }
-  const active = recs.filter(r => !r.skip);
-  // 노이즈(아이템 임시 판매 등)를 제외한 구간 중 가장 절대값이 큰 시간당 효율(hourly)을 찾습니다.
-  const maxAbsHourly = Math.max(1, ...active.map(r => Math.abs(r.hourly)));
-  
-  bars.innerHTML = recs.map(r => {
-    if (r.skip) return `<div class="bar-col"><div class="bar skip" style="height:20px"></div><div class="bar-lbl">${r.endTime}</div></div>`;
-    
-    // 절대 금액이 아닌 '시간당 효율'의 가중치로 막대 높이 계산 (최대 66px)
-    const h = Math.max(3, Math.round((Math.abs(r.hourly) / maxAbsHourly) * 66));
-    
-    return `
-      <div class="bar-col" title="구간 시급: ${fmt(r.hourly)}">
-        <div class="bar ${r.profit < 0 ? 'neg' : 'pos'}" style="height:${h}px"></div>
-        <div class="bar-lbl">${r.endTime}</div>
-      </div>
-    `;
+  tbody.innerHTML = [...window.records].reverse().map(r => {
+    const cls = r.skip ? 'skip' : r.profit < 0 ? 'neg' : '';
+    const badge = r.skip
+      ? '<span class="badge badge-skip">아이템판매</span>'
+      : r.profit < 0 ? '<span class="badge badge-neg">손실</span>' : '';
+    const profitTxt = r.skip ? '-' : (r.profit >= 0 ? '+' : '') + fmt(r.profit);
+    const hourlyTxt = r.skip ? '-' : fmt(r.hourly);
+    return `<tr class="${cls}">
+      <td>${r.startTime}→${r.endTime}${badge}</td>
+      <td>${r.mins}</td>
+      <td>${profitTxt}</td>
+      <td>${hourlyTxt}</td>
+    </tr>`;
   }).join('');
 }
 
-function renderTotalSummaryPage() {
-  let allProfit = 0;
-  let allMins = 0;
-  let rowsHTML = "";
-
-  globalState.characters.forEach(char => {
-    const recs = globalState.records[char] || [];
-    const active = recs.filter(r => !r.skip);
-    const totalMins = active.reduce((s,r) => s+r.mins, 0);
-    const totalProfit = active.reduce((s,r) => s+r.profit, 0);
-    const hourly = totalMins > 0 ? Math.round((totalProfit/totalMins)*60) : 0;
-
-    allProfit += totalProfit;
-    allMins += totalMins;
-
-    rowsHTML += `
-      <tr>
-        <td style="text-align:left; font-weight:600;">${char}</td>
-        <td>${totalMins}분</td>
-        <td class="${totalProfit >= 0 ? 'pos' : 'neg'}" style="font-weight:600; color:${totalProfit >= 0 ? 'var(--green-dark)' : 'var(--red-dark)'}">
-          ${totalProfit >= 0 ? '+' : ''}${fmt(totalProfit)}
-        </td>
-        <td>${fmt(hourly)}</td>
-      </tr>
-    `;
-  });
-
-  $('allCharTotalProfit').textContent = (allProfit >= 0 ? '+' : '') + fmt(allProfit);
-  $('allCharTotalMins').textContent = `총 플레이 타임: ${allMins}분`;
-  $('totalSummaryBbody').innerHTML = rowsHTML || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--gray-500)">활성화된 캐릭터가 없습니다.</td></tr>';
-}
-
-function closeAllDays() {
-  let hasAnyRecord = false;
-  globalState.characters.forEach(char => {
-    if(globalState.records[char] && globalState.records[char].length > 0) hasAnyRecord = true;
-  });
-
-  if (!hasAnyRecord) { alert('마감할 당일 데이터가 없습니다.'); return; }
-  if (!confirm('모든 캐릭터의 당일 기록을 일괄 마감할까요?\n합산 데이터가 히스토리에 기록됩니다.')) return;
-
-  let totalMins = 0;
-  let totalProfit = 0;
-  let summaryDetails = [];
-
-  globalState.characters.forEach(char => {
-    const recs = globalState.records[char] || [];
-    if(recs.length === 0) return;
-
-    const active = recs.filter(r => !r.skip);
-    const cMins = active.reduce((s,r) => s+r.mins, 0);
-    const cProfit = active.reduce((s,r) => s+r.profit, 0);
-    
-    totalMins += cMins;
-    totalProfit += cProfit;
-
-    summaryDetails.push({
-      charName: char, mins: cMins, profit: cProfit, intervals: recs.length
-    });
-  });
-
-  const hourly = totalMins > 0 ? Math.round((totalProfit / totalMins) * 60) : 0;
-
-  const historyEntry = {
-    date: today(), startTime: nowTime(), endTime: nowTime(),
-    initBalance: 0, finalBalance: 0,
-    totalMins, totalProfit, hourly, dailyRate: hourly * 24,
-    isBulk: true, summaryDetails, records: [] 
-  };
-
-  if(!globalState.history) globalState.history = [];
-  globalState.history.unshift(historyEntry);
+// ── 금액 기준선(Y축)을 포함한 Canvas 꺾은선형 차트 핵심 함수 ──
+function drawCanvasLineChart(canvasId, recs) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
   
-  globalState.records = {};
-  globalState.characters.forEach(char => {
-    if(globalState.configs[char]) {
-      globalState.configs[char].startTime = nowTime();
-      globalState.configs[char].initBalance = "";
+  if (!recs || !recs.length) {
+    canvas.style.display = 'none';
+    let wrapper = canvas.parentElement;
+    let noDataNode = wrapper.querySelector('.no-chart-data');
+    if (!noDataNode) {
+      noDataNode = document.createElement('div');
+      noDataNode.className = 'no-chart-data';
+      noDataNode.style = "width:100%;text-align:center;color:var(--gray-400);font-size:13px;padding:40px 0;";
+      noDataNode.textContent = "기록 없음";
+      wrapper.appendChild(noDataNode);
+    }
+    return;
+  }
+  
+  canvas.style.display = 'block';
+  const noDataNode = canvas.parentElement.querySelector('.no-chart-data');
+  if (noDataNode) noDataNode.remove();
+
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 140 * dpr;
+  ctx.scale(dpr, dpr);
+
+  const width = rect.width;
+  const height = 140;
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textColor = isDark ? '#aaa' : '#666';
+  const gridColor = isDark ? '#333333' : '#E9ECEF';
+  const lineColor = isDark ? '#22C55E' : '#1D9E75';
+
+  const paddingLeft = 55;  
+  const paddingRight = 20;
+  const paddingTop = 15;
+  const paddingBottom = 25;
+
+  const graphWidth = width - paddingLeft - paddingRight;
+  const graphHeight = height - paddingTop - paddingBottom;
+
+  const active = recs.filter(r => !r.skip);
+  let values = active.map(r => r.hourly);
+  if (values.length === 0) values = [0];
+
+  let maxVal = Math.max(...values, 0);
+  let minVal = Math.min(...values, 0);
+  
+  if (maxVal === minVal) {
+    maxVal += 10000;
+    minVal = minVal > 0 ? minVal - 10000 : 0;
+  }
+  
+  const range = maxVal - minVal;
+  maxVal += range * 0.1;
+  minVal -= range * 0.1;
+
+  const gridRows = 4;
+  ctx.lineWidth = 1;
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+
+  for (let i = 0; i <= gridRows; i++) {
+    const ratio = i / gridRows;
+    const y = paddingTop + graphHeight * (1 - ratio);
+    const val = minVal + (maxVal - minVal) * ratio;
+
+    ctx.strokeStyle = gridColor;
+    ctx.beginPath();
+    ctx.moveTo(paddingLeft, y);
+    ctx.lineTo(width - paddingRight, y);
+    ctx.stroke();
+
+    ctx.fillStyle = textColor;
+    ctx.fillText(Math.round(val).toLocaleString('ko-KR'), paddingLeft - 8, y);
+  }
+
+  function getX(index, total) {
+    if (total <= 1) return paddingLeft + graphWidth / 2;
+    return paddingLeft + (index / (total - 1)) * graphWidth;
+  }
+  function getY(val) {
+    const ratio = (val - minVal) / (maxVal - minVal);
+    return paddingTop + graphHeight * (1 - ratio);
+  }
+
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+
+  recs.forEach((r, idx) => {
+    const currentVal = r.skip ? 0 : r.hourly;
+    const x = getX(idx, recs.length);
+    const y = getY(currentVal);
+
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+
+  recs.forEach((r, idx) => {
+    const currentVal = r.skip ? 0 : r.hourly;
+    const x = getX(idx, recs.length);
+    const y = getY(currentVal);
+
+    ctx.fillStyle = r.skip ? '#ADB5BD' : (r.profit < 0 ? 'var(--red)' : 'var(--green)');
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (recs.length <= 6 || idx % Math.ceil(recs.length / 5) === 0 || idx === recs.length - 1) {
+      ctx.fillStyle = textColor;
+      ctx.fillText(r.endTime, x, height - paddingBottom + 6);
     }
   });
+}
 
-  saveState();
+function closeDay() {
+  if (!window.records.length) { alert('기록이 없어요!'); return; }
+  if (!confirm('오늘 기록을 마감할까요?\n히스토리에 저장되고 초기화됩니다.')) return;
+  const active = window.records.filter(r => !r.skip);
+  const totalMins = active.reduce((s,r) => s+r.mins, 0);
+  const totalProfit = active.reduce((s,r) => s+r.profit, 0);
+  const hourly = totalMins > 0 ? Math.round((totalProfit/totalMins)*60) : 0;
+  const entry = {
+    date: today(),
+    startTime: $('startTime').value || window.records[0].startTime,
+    endTime: window.records[window.records.length-1].endTime,
+    initBalance: parseInt($('initBalance').value) || 0,
+    finalBalance: window.records[window.records.length-1].balance,
+    totalMins, totalProfit, hourly,
+    dailyRate: hourly * 24,
+    records: [...window.records]
+  };
+  window.history.unshift(entry);
+  localStorage.setItem('gm_history', JSON.stringify(window.history));
+  window.records = [];
+  localStorage.setItem('gm_records', JSON.stringify(window.records));
+  
+  // Firebase 업로드 동기화
+  if (typeof window.saveToFirebase === 'function') window.saveToFirebase();
+
+  $('initBalance').value = '';
+  $('startTime').value = '';
+  render();
   showPage('history');
 }
 
 function undoLast() {
-  const char = globalState.selectedChar;
-  if (!globalState.records[char] || !globalState.records[char].length) return;
-  globalState.records[char].pop();
-  saveState();
+  if (!window.records.length) return;
+  window.records.pop();
+  localStorage.setItem('gm_records', JSON.stringify(window.records));
+  
+  if (typeof window.saveToFirebase === 'function') window.saveToFirebase();
+  render();
 }
 
 function resetToday() {
-  if (!confirm(`현재 캐릭터 [${globalState.selectedChar}]의 당일 데이터를 초기화할까요?`)) return;
-  globalState.records[globalState.selectedChar] = [];
-  saveState();
+  if (!confirm('오늘 기록을 전부 초기화할까요?')) return;
+  window.records = [];
+  localStorage.setItem('gm_records', JSON.stringify(window.records));
+  
+  if (typeof window.saveToFirebase === 'function') window.saveToFirebase();
+  render();
 }
 
 function exportCSV() {
-  const recs = getActiveCharRecords();
   const rows = [['구간','소요(분)','수익','잔액','시간당','비고']];
-  recs.forEach(r => rows.push([
+  window.records.forEach(r => rows.push([
     `${r.startTime}→${r.endTime}`, r.mins, r.profit, r.balance,
     r.skip ? '생략' : r.hourly, r.skip ? '아이템판매' : r.profit < 0 ? '손실' : ''
   ]));
+  const active = window.records.filter(r=>!r.skip);
+  const tm = active.reduce((s,r)=>s+r.mins,0);
+  const tp = active.reduce((s,r)=>s+r.profit,0);
+  rows.push([], ['총플레이(분)', tm, '총수익', tp, '시간당', tm>0?Math.round((tp/tm)*60):0]);
   const csv = rows.map(r => r.join(',')).join('\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `게임머니_${globalState.selectedChar}_${today()}.csv`;
+  a.download = `게임머니_${today()}.csv`;
   a.click();
 }
 
+// ── 히스토리 ──
 function renderHistory() {
-  const list = $('getHistList'); 
-  const listCont = $('histList');
+  const list = $('histList');
   const detail = $('histDetail');
   detail.style.display = 'none';
-  listCont.style.display = 'block';
+  list.style.display = 'block';
 
-  if (!globalState.history || !globalState.history.length) {
-    listCont.innerHTML = `<div style="text-align:center; padding:40px; color:var(--gray-500);">📅 마감 데이터가 없습니다.</div>`;
+  if (!window.history.length) {
+    list.innerHTML = `<div class="no-data">
+      <div class="no-data-icon">📅</div>
+      <div class="no-data-text">마감한 날의 기록이<br>여기에 쌓여요</div>
+    </div>`;
     return;
   }
 
-  const totalDays = globalState.history.length;
-  const totalProfit = globalState.history.reduce((s,h) => s+h.totalProfit, 0);
-  const avgHourly = Math.round(globalState.history.reduce((s,h) => s+h.hourly, 0) / totalDays);
-  const maxProfit = Math.max(1, ...globalState.history.map(h => Math.abs(h.totalProfit)));
+  const totalDays = window.history.length;
+  const totalProfit = window.history.reduce((s,h) => s+h.totalProfit, 0);
+  const avgHourly = Math.round(window.history.reduce((s,h) => s+h.hourly, 0) / totalDays);
+  const maxProfit = Math.max(1, ...window.history.map(h => Math.abs(h.totalProfit)));
 
-  listCont.innerHTML = `
+  list.innerHTML = `
     <div class="summary-card">
       <div class="summary-title">전체 누적 수익</div>
       <div class="summary-val">${totalProfit >= 0 ? '+' : ''}${fmt(totalProfit)}</div>
-      <div class="summary-sub">총 ${totalDays}회 마감 정산 누적</div>
+      <div class="summary-sub">총 ${totalDays}일 기록</div>
       <div class="summary-grid">
-        <div class="summary-item"><div class="summary-item-label">평균 시간당</div><div class="summary-item-val">${fmt(avgHourly)}</div></div>
-        <div class="summary-item"><div class="summary-item-label">하루 예상</div><div class="summary-item-val">${fmt(avgHourly * 24)}</div></div>
+        <div class="summary-item">
+          <div class="summary-item-label">평균 시간당</div>
+          <div class="summary-item-val">${fmt(avgHourly)}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">평균 하루 예상</div>
+          <div class="summary-item-val">${fmt(avgHourly * 24)}</div>
+        </div>
       </div>
     </div>
-    ${globalState.history.map((h, i) => {
+    ${window.history.map((h, i) => {
       const isPos = h.totalProfit >= 0;
       const barW = Math.round((Math.abs(h.totalProfit) / maxProfit) * 100);
-      const subText = h.isBulk ? `[일괄통합정산] 참여 캐릭터: ${h.summaryDetails ? h.summaryDetails.length : 0}개` : `${h.startTime} ~ ${h.endTime}`;
       return `<div class="day-card" onclick="showDetail(${i})">
         <div class="day-top">
           <div>
             <div class="day-date">${h.date}</div>
-            <div class="day-meta">${subText} · ${h.totalMins}분</div>
+            <div class="day-meta">${h.startTime} ~ ${h.endTime} · ${h.totalMins}분 · ${h.records.filter(r=>!r.skip).length}구간</div>
           </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div class="day-profit ${isPos?'pos':'neg'}" style="color:${isPos ? 'var(--green-dark)' : 'var(--red-dark)'}">${isPos?'+':''}${fmt(h.totalProfit)}</div>
-            <div style="color:var(--gray-400);">›</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="day-profit ${isPos?'pos':'neg'}">${isPos?'+':''}${fmt(h.totalProfit)}</div>
+            <div class="arrow">›</div>
           </div>
         </div>
+        <div class="day-bar-wrap"><div class="day-bar ${isPos?'pos':'neg'}" style="width:${barW}%"></div></div>
       </div>`;
     }).join('')}
   `;
 }
 
 function showDetail(idx) {
-  const h = globalState.history[idx];
+  const h = window.history[idx];
   const list = $('histList');
   const detail = $('histDetail');
   list.style.display = 'none';
   detail.style.display = 'block';
 
-  let bodyContentHTML = "";
-
-  if (h.isBulk && h.summaryDetails) {
-    bodyContentHTML = `
-      <div class="card-label">일괄 마감 세부 캐릭터 내역</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>닉네임</th><th>플레이 타임</th><th>기록수익</th></tr></thead>
-          <tbody>${h.summaryDetails.map(c => `<tr><td style="text-align:left; font-weight:600;">${c.charName}</td><td>${c.mins}분</td><td style="font-weight:600;">${c.profit >= 0 ? '+' : ''}${fmt(c.profit)}</td></tr>`).join('')}</tbody>
-        </table>
-      </div>
-    `;
-  }
-
   detail.innerHTML = `
     <div class="detail-header">
-      <button class="back-btn" onclick="backToList()">‹ 뒤로가기</button>
-      <div class="detail-title">${h.date} 상세 리포트</div>
+      <button class="back-btn" onclick="backToList()">‹ 뒤로</button>
+      <div class="detail-title">${h.date}</div>
     </div>
     <div class="scroll-content">
       <div class="stats-grid">
-        <div class="stat"><div class="stat-label">총 가동시간</div><div class="stat-val">${h.totalMins}분</div></div>
+        <div class="stat"><div class="stat-label">플레이</div><div class="stat-val">${h.totalMins}분</div></div>
         <div class="stat"><div class="stat-label">총 수익</div><div class="stat-val ${h.totalProfit>=0?'pos':'neg'}">${fmt(h.totalProfit)}</div></div>
-        <div class="stat"><div class="stat-label">통합 시간당</div><div class="stat-val ${h.hourly>=0?'pos':'neg'}">${fmt(h.hourly)}</div></div>
+        <div class="stat"><div class="stat-label">시간당</div><div class="stat-val ${h.hourly>=0?'pos':'neg'}">${fmt(h.hourly)}</div></div>
       </div>
-      ${bodyContentHTML}
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-label">초기 잔액</div><div class="stat-val">${fmt(h.initBalance)}</div></div>
+        <div class="stat"><div class="stat-label">최종 잔액</div><div class="stat-val">${fmt(h.finalBalance)}</div></div>
+        <div class="stat"><div class="stat-label">하루 예상</div><div class="stat-val pos">${fmt(h.dailyRate)}</div></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-inner">
+          <div class="chart-title">구간별 효율 흐름 (시간당 수익)</div>
+          <div class="chart-container">
+            <canvas id="detailChart" class="chart-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>구간</th><th>분</th><th>수익</th><th>시간당</th></tr></thead>
+          <tbody>${h.records.map(r => {
+            const cls = r.skip ? 'skip' : r.profit < 0 ? 'neg' : '';
+            const badge = r.skip ? '<span class="badge badge-skip">아이템판매</span>' : r.profit < 0 ? '<span class="badge badge-neg">손실</span>' : '';
+            return `<tr class="${cls}"><td>${r.startTime}→${r.endTime}${badge}</td><td>${r.mins}</td><td>${r.skip?'-':(r.profit>=0?'+':'')+fmt(r.profit)}</td><td>${r.skip?'-':fmt(r.hourly)}</td></tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
       <div class="btn-row">
-        <button class="btn-sm danger" onclick="deleteHistoryDay(${idx})">🗑 이 리포트 삭제</button>
+        <button class="btn-sm danger" onclick="deleteDay(${idx})">🗑 이 날 삭제</button>
       </div>
     </div>
   `;
+
+  // 히스토리 상세용 꺾은선 차트 드로잉 호출
+  setTimeout(() => {
+    drawCanvasLineChart('detailChart', h.records);
+  }, 50);
 }
 
 function backToList() {
@@ -919,10 +953,12 @@ function backToList() {
   $('histList').style.display = 'block';
 }
 
-function deleteHistoryDay(idx) {
-  if (!confirm('이 히스토리 기록을 영구히 삭제할까요?')) return;
-  globalState.history.splice(idx, 1);
-  saveState();
+function deleteDay(idx) {
+  if (!confirm('이 날 기록을 삭제할까요?')) return;
+  window.history.splice(idx, 1);
+  localStorage.setItem('gm_history', JSON.stringify(window.history));
+  
+  if (typeof window.saveToFirebase === 'function') window.saveToFirebase();
   renderHistory();
 }
 
@@ -930,9 +966,11 @@ function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   $('page-' + p).classList.add('active');
-  $('tab-' + p).classList.add('active');
+  document.querySelectorAll('.tab')[p === 'record' ? 0 : 1].classList.add('active');
   if (p === 'history') renderHistory();
 }
+
+render();
 </script>
 </body>
 </html>
