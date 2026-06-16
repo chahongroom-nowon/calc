@@ -1,243 +1,958 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>매장 정산 시스템 - 최종 통합본</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --danger: #ef4444; }
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
-        .tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; }
-        .tab-btn { padding: 10px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: #64748b; }
-        .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .drop-zone { border: 3px dashed #cbd5e1; border-radius: 12px; padding: 50px; text-align: center; color: #475569; background: #f8fafc; cursor: pointer; margin-bottom: 20px; }
-        .added-item-tag { display: flex; align-items: center; justify-content: space-between; background: #eff6ff; padding: 12px; border-radius: 12px; margin: 8px 0; border: 1px solid #bfdbfe; }
-        .main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .staff-group { margin-bottom: 40px; border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
-        .staff-header { background: #f1f5f9; padding: 15px 20px; border-bottom: 1px solid #cbd5e1; }
-        .summary-table { width: 100%; background: #fff; margin: 10px 0; border-collapse: collapse; }
-        .summary-table th { background: #eff6ff; color: #1e40af; font-size: 11px; padding: 8px; border: 1px solid #dbeafe; }
-        .summary-table td { font-weight: bold; color: var(--primary); font-size: 13px; padding: 8px; text-align: center; border: 1px solid #dbeafe; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 13px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>게임머니 트래커 PRO</title>
+<style>
+:root {
+  --green: #1D9E75;
+  --green-light: #E1F5EE;
+  --green-dark: #0F6E56;
+  --red: #D85A30;
+  --red-light: #FAECE7;
+  --red-dark: #993C1D;
+  --gray-50: #F8F9FA;
+  --gray-100: #F1F3F5;
+  --gray-200: #E9ECEF;
+  --gray-300: #DEE2E6;
+  --gray-400: #CED4DA;
+  --gray-500: #ADB5BD;
+  --gray-600: #6C757D;
+  --gray-700: #495057;
+  --gray-800: #343A40;
+  --gray-900: #212529;
+  --amber-light: #FAEEDA;
+  --amber: #BA7517;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gray-50: #1a1a1a;
+    --gray-100: #212121;
+    --gray-200: #2a2a2a;
+    --gray-300: #333;
+    --gray-400: #444;
+    --gray-500: #666;
+    --gray-600: #888;
+    --gray-700: #aaa;
+    --gray-800: #ccc;
+    --gray-900: #eee;
+    --green-light: #0a2e22;
+    --red-light: #2e0f0a;
+    --amber-light: #2e1f0a;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--gray-50);
+}
+
+/* ── 상단 헤더 및 캐릭터 선택 ── */
+.header-area {
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 12px 16px 8px;
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.header-top h1 { font-size: 17px; font-weight: 600; color: var(--gray-900); }
+
+/* 닉네임 관리 섹션 */
+.char-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.char-select {
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-300);
+  background: #fff;
+  color: var(--gray-900);
+}
+@media (prefers-color-scheme: dark) { .char-select { background: var(--gray-200); } }
+.btn-char-manage {
+  background: var(--gray-200);
+  border: none;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--gray-700);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--gray-50);
+}
+.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--gray-200); }
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-500);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s;
+}
+.tab.active { color: var(--green); }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--green);
+  border-radius: 2px 2px 0 0;
+}
+
+.page { display: none; flex: 1; overflow-y: auto; }
+.page.active { display: block; }
+.scroll-content { padding: 16px; padding-bottom: calc(24px + var(--safe-bottom)); }
+
+.card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+@media (prefers-color-scheme: dark) { .card { background: var(--gray-200); } }
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.init-row { display: flex; gap: 10px; }
+.init-row .field { flex: 1; }
+.field label { font-size: 13px; color: var(--gray-600); display: block; margin-bottom: 5px; }
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  outline: none;
+}
+.field input:focus { border-color: var(--green); }
+
+.balance-card { text-align: center; }
+.balance-label { font-size: 13px; color: var(--gray-600); margin-bottom: 10px; }
+.balance-input {
+  width: 100%;
+  font-size: 32px;
+  font-weight: 600;
+  text-align: center;
+  padding: 16px 12px;
+  border: 2px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background: var(--gray-50);
+  color: var(--gray-900);
+  outline: none;
+}
+.balance-input:focus { border-color: var(--green); }
+@media (prefers-color-scheme: dark) { .balance-input { background: var(--gray-300); } }
+
+.btn-checkpoint {
+  width: 100%;
+  padding: 18px;
+  font-size: 17px;
+  font-weight: 600;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(29,158,117,0.35);
+}
+
+.btn-close {
+  width: 100%;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--red-dark);
+  border: 1.5px solid #F5C4B3;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.btn-close:active { background: var(--red-light); }
+
+.btn-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.btn-sm {
+  flex: 1;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.btn-sm.danger { color: var(--red-dark); border-color: #F5C4B3; background: var(--red-light); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.stat {
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+@media (prefers-color-scheme: dark) { .stat { background: var(--gray-200); } }
+.stat-label { font-size: 11px; color: var(--gray-500); margin-bottom: 4px; font-weight: 500; }
+.stat-val { font-size: 18px; font-weight: 600; color: var(--gray-900); }
+.stat-val.pos { color: var(--green-dark); }
+.stat-val.neg { color: var(--red-dark); }
+
+.chart-wrap { margin-bottom: 12px; }
+.chart-inner {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 14px 10px;
+}
+@media (prefers-color-scheme: dark) { .chart-inner { background: var(--gray-200); } }
+.chart-title { font-size: 11px; font-weight: 600; color: var(--gray-500); margin-bottom: 10px; }
+.bars { display: flex; align-items: flex-end; gap: 5px; height: 72px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 3px; }
+.bar.pos { background: var(--green); }
+.bar.neg { background: var(--red); }
+.bar.skip { background: var(--gray-300); }
+.bar-lbl { font-size: 9px; color: var(--gray-500); }
+
+.table-wrap {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+@media (prefers-color-scheme: dark) { .table-wrap { background: var(--gray-200); } }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  font-weight: 600;
+  padding: 9px 10px;
+  text-align: right;
+  font-size: 11px;
+}
+th:first-child { text-align: left; }
+td { padding: 11px 10px; text-align: right; border-top: 1px solid var(--gray-100); color: var(--gray-800); }
+td:first-child { text-align: left; color: var(--gray-600); }
+tr.neg td { color: var(--red-dark); background: var(--red-light); }
+tr.skip td { color: var(--gray-500); background: var(--gray-50); font-size: 12px; }
+.badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 99px; margin-left: 4px; }
+.badge-skip { background: var(--gray-200); color: var(--gray-600); }
+.badge-neg { background: #F5C4B3; color: var(--red-dark); }
+.empty-row td { text-align: center; padding: 32px 16px; color: var(--gray-500); }
+
+.summary-card { background: var(--green); border-radius: var(--radius-lg); padding: 20px 16px; margin-bottom: 12px; color: #fff; }
+.summary-title { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+.summary-val { font-size: 28px; font-weight: 700; }
+.summary-sub { font-size: 13px; opacity: 0.75; margin-top: 6px; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.summary-item { background: rgba(255,255,255,0.15); border-radius: var(--radius-sm); padding: 10px 12px; }
+.summary-item-label { font-size: 11px; opacity: 0.75; margin-bottom: 3px; }
+.summary-item-val { font-size: 16px; font-weight: 600; }
+
+.day-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 16px; margin-bottom: 10px; }
+@media (prefers-color-scheme: dark) { .day-card { background: var(--gray-200); } }
+.day-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.day-date { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+.day-profit { font-size: 18px; font-weight: 700; }
+.day-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+.detail-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 50; }
+.back-btn { background: var(--gray-100); border: none; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 14px; color: var(--gray-700); cursor: pointer; }
+
+/* 모달 스타일 */
+.modal {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
+}
+.modal-content {
+  background: #fff; max-width: 400px; width: 90%; border-radius: var(--radius-lg); padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+@media (prefers-color-scheme: dark) { .modal-content { background: var(--gray-800); } }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.char-list-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--gray-200);
+}
+.char-list-item span { font-weight: 500; }
+.char-actions { display: flex; gap: 4px; }
+.btn-mini { padding: 4px 8px; font-size: 11px; border: none; border-radius: var(--radius-sm); cursor: pointer; }
+.btn-mini.edit { background: var(--gray-200); color: var(--gray-800); }
+.btn-mini.del { background: var(--red-light); color: var(--red-dark); }
+</style>
 </head>
 <body>
+<div class="app">
 
-<div class="container">
+  <div class="header-area">
+    <div class="header-top">
+      <h1>🎮 머니 트래커</h1>
+      <div class="char-selector-wrap">
+        <select id="charSelect" class="char-select" onchange="switchCharacter(this.value)">
+          </select>
+        <button class="btn-char-manage" onclick="openCharModal()">⚙️ 관리</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar">
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab('input-tab')">내수 입력</button>
-        <button class="tab-btn" onclick="openTab('history-tab')">내역 보기</button>
-        <button class="tab-btn" onclick="openTab('setting-tab')">물건 설정</button>
+      <button class="tab active" id="tab-record" onclick="showPage('record')">📍 캐릭터 기록</button>
+      <button class="tab" id="tab-total" onclick="showPage('total')">📊 전 캐릭터 정산</button>
+      <button class="tab" id="tab-history" onclick="showPage('history')">📅 히스토리</button>
     </div>
+  </div>
 
-    <div id="input-tab" class="tab-content active">
-        <h2>📂 엑셀 데이터 가져오기 (가짜 XLS 대응)</h2>
-        <div id="drop-zone" class="drop-zone" onclick="document.getElementById('excel-input').click()">여기에 파일을 드래그하거나 클릭하세요.</div>
-        <input type="file" id="excel-input" style="display:none;">
-
-        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #e2e8f0;">
-
-        <h2>✍️ 수동 정산 입력</h2>
-        <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold;">직원 이름</label>
-            <input type="text" id="staff-name" placeholder="이름 입력">
+  <div class="page active" id="page-record">
+    <div class="scroll-content">
+      <div class="card">
+        <div class="card-label">초기 설정</div>
+        <div class="init-row">
+          <div class="field">
+            <label>시작 시간</label>
+            <input type="time" id="startTime" value="10:10" onchange="updateLiveConfig()">
+          </div>
+          <div class="field">
+            <label>초기 보유 금액</label>
+            <input type="number" id="initBalance" placeholder="43605" inputmode="numeric" onchange="updateLiveConfig()">
+          </div>
         </div>
-        <div style="margin-bottom:15px; position:relative;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold;">물건 검색</label>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="item-search" placeholder="제품명 입력" oninput="searchItem(this.value)" style="flex-grow:1;">
-                <input type="number" id="item-qty-input" value="1" min="1" style="width:80px; text-align:center;">
-            </div>
-            <div id="autocomplete-box" style="position:absolute; background:white; border:1px solid #ddd; width:100%; z-index:100; display:none; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div>
-        </div>
+      </div>
 
-        <div id="selected-items-display"></div>
-        <div style="margin: 20px 0; font-size: 1.2rem;"><strong>전송 대기 합계: <span id="total-amount" style="color:var(--primary)">0</span>원</strong></div>
-        <button class="main-btn" onclick="submitLog()">Firebase 최종 전송</button>
+      <div class="card balance-card">
+        <div class="balance-label">현재 보유 금액</div>
+        <input type="number" id="curBalance" class="balance-input" placeholder="0" inputmode="numeric" onkeydown="if(event.key==='Enter')addCheckpoint()">
+      </div>
+
+      <button class="btn-checkpoint" id="checkBtn" onclick="addCheckpoint()">📍 체크포인트 찍기</button>
+
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-label">플레이</div><div class="stat-val" id="statTime">0분</div></div>
+        <div class="stat"><div class="stat-label">수익</div><div class="stat-val" id="statProfit">0</div></div>
+        <div class="stat"><div class="stat-label">시간당</div><div class="stat-val" id="statHourly">0</div></div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-inner">
+          <div class="chart-title">구간별 수익 흐름</div>
+          <div class="bars" id="chartBars"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-sm" onclick="undoLast()">↩ 되돌리기</button>
+        <button class="btn-sm" onclick="exportCSV()">⬇ CSV</button>
+        <button class="btn-sm danger" onclick="resetToday()">🗑 초기화</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>구간</th><th>분</th><th>수익</th><th>시간당</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
-    <div id="history-tab" class="tab-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2>👤 직원별 상세 정산 보고서</h2>
-            <div>
-                <button onclick="exportToExcel()" style="padding:10px; background:#10b981; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">📊 엑셀 백업</button>
-                <button onclick="resetLogs()" style="padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">⚠️ 초기화</button>
-            </div>
-        </div>
-        <div id="history-container"></div>
-    </div>
+  <div class="page" id="page-total">
+    <div class="scroll-content">
+      <div class="card" style="background:var(--green); color:#fff; text-align:center; padding:24px 16px;">
+        <div style="font-size:13px; opacity:0.9; margin-bottom:6px;">금일 가동중인 전체 캐릭터 총합 수익</div>
+        <div id="allCharTotalProfit" style="font-size:32px; font-weight:800;">0</div>
+        <div id="allCharTotalMins" style="font-size:14px; opacity:0.8; margin-top:6px;">총 플레이 타임: 0분</div>
+      </div>
 
-    <div id="setting-tab" class="tab-content">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-            <div>
-                <h2>🛠 새 물건 등록</h2>
-                <input type="text" id="new-item-name" placeholder="품목명" style="margin-bottom:10px;">
-                <input type="number" id="new-item-price" placeholder="단가" style="margin-bottom:10px;">
-                <select id="new-item-category" style="margin-bottom:10px;">
-                    <option value="직원내수">직원내수</option><option value="CL">CL</option><option value="가발">가발</option>
-                    <option value="블로거ST">블로거ST</option><option value="재시술">재시술</option><option value="명함">명함</option>
-                </select>
-                <button class="main-btn" onclick="regItem()">물건 등록</button>
-            </div>
-            <div id="master-item-list"></div>
-        </div>
+      <div class="card-label" style="margin-top:16px;">캐릭터별 실시간 요약 현황</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>닉네임</th><th>플레이</th><th>당일수익</th><th>시간당</th></tr>
+          </thead>
+          <tbody id="totalSummaryBbody">
+            </tbody>
+        </table>
+      </div>
+
+      <button class="btn-close" style="margin-top:20px; font-size:16px; padding:18px;" onclick="closeAllDays()">🏁 전 캐릭터 일괄 마감하기</button>
     </div>
+  </div>
+
+  <div class="page" id="page-history">
+    <div id="histList" class="scroll-content"></div>
+    <div id="histDetail" style="display:none"></div>
+  </div>
+
 </div>
 
+<div id="charModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-title">캐릭터 닉네임 관리</div>
+    <div style="display:flex; gap:6px; margin-bottom:12px;">
+      <input type="text" id="newCharName" placeholder="새 닉네임 입력" style="flex:1; padding:8px; border:1px solid var(--gray-300); border-radius:var(--radius-sm);">
+      <button class="btn-sm" onclick="addNewCharacter()" style="margin-bottom:0; flex:none; padding:0 12px;">추가</button>
+    </div>
+    <div id="modalCharList" style="max-height:200px; overflow-y:auto; margin-bottom:16px;"></div>
+    <button class="btn-sm" onclick="closeCharModal()" style="width:100%;">닫기</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCCGI5gtzwYM9vyRMS5qhTaNsFZ8rZDK-o",
-        authDomain: "clac-efaab.firebaseapp.com",
-        databaseURL: "https://clac-efaab-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "clac-efaab",
-        appId: "1:94106141769:web:5391ba91c0300bf652ab98"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+// ── [필수 확인] Firebase 설정 및 초기화 ──
+const firebaseConfig = {
+  apiKey: "AIzaSyCCGI5gtzwYM9vyRMS5qhTaNsFZ8rZDk-o",
+  authDomain: "clac-efaab.firebaseapp.com",
+  databaseURL: "https://clac-efaab-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "clac-efaab",
+  storageBucket: "clac-efaab.firebasestorage.app",
+  messagingSenderId: "94106141769",
+  appId: "1:94106141769:web:5391ba91c0300bf652ab98",
+};
 
-    let masterItems = {};
-    let selectedBasket = [];
-    let currentLogs = {};
-    const categories = ["직원내수", "CL", "가발", "블로거ST", "재시술", "명함"];
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    db.ref('items').on('value', (snap) => { masterItems = snap.val() || {}; renderMasterList(); });
-    db.ref('logs').on('value', (snap) => { currentLogs = snap.val() || {}; renderHistory(currentLogs); });
+// 글로벌 상태 객체
+let globalState = {
+  characters: ["기본캐릭터"],
+  selectedChar: "기본캐릭터",
+  records: {},  // { '닉네임': [records...] }
+  history: [],  // 마감 데이터 히스토리 누적 배열
+  configs: {}   // { '닉네임': { startTime, initBalance } }
+};
 
-    // 엑셀 분석 (지능형 스캔)
-    const excelInput = document.getElementById('excel-input');
-    excelInput.onchange = (e) => {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const data = new Uint8Array(ev.target.result);
-            const workbook = XLSX.read(data, { type: 'array', codepage: 949 });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-            
-            let count = 0;
-            rows.forEach((row) => {
-                const menu = String(row[5] || "").trim(); // F열
-                const staff = String(row[6] || "").trim(); // G열
-                const matchedKey = Object.keys(masterItems).find(k => k.replace(/\s/g, "") === menu.replace(/\s/g, ""));
-                
-                if (matchedKey && staff && menu !== "상세메뉴") {
-                    const info = masterItems[matchedKey];
-                    selectedBasket.push({
-                        staff, itemName: matchedKey, price: Number(info.price || 0),
-                        category: info.category || "직원내수", timestamp: Date.now()
-                    });
-                    count++;
-                }
-            });
-            renderBasket();
-            alert(count + "개를 가져왔습니다.");
-        };
-        reader.readAsArrayBuffer(file);
-    };
+const $ = id => document.getElementById(id);
+function fmt(n) { return Math.round(n || 0).toLocaleString('ko-KR'); }
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function nowTime() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function timeDiffMin(t1, t2) {
+  if(!t1 || !t2) return 0;
+  const [h1, m1] = t1.split(':').map(Number);
+  const [h2, m2] = t2.split(':').map(Number);
+  let d = (h2*60+m2) - (h1*60+m1);
+  return d <= 0 ? d + 1440 : d;
+}
 
-    // 수동 입력
-    function searchItem(val) {
-        const box = document.getElementById('autocomplete-box');
-        if(!val) { box.style.display = 'none'; return; }
-        const matches = Object.keys(masterItems).filter(k => k.includes(val));
-        if(matches.length > 0) {
-            box.innerHTML = matches.map(m => `<div style="padding:10px; cursor:pointer; border-bottom:1px solid #eee;" onclick="addItemToBasket('${m}')">${m} (${Number(masterItems[m].price).toLocaleString()}원)</div>`).join('');
-            box.style.display = 'block';
-        } else { box.style.display = 'none'; }
+// Firebase 리스너 활성화 (실시간 데이터 동기화 동적 연결)
+db.ref('tracker_state').on('value', (snapshot) => {
+  const data = snapshot.val();
+  if (data) {
+    globalState.characters = data.characters || ["기본캐릭터"];
+    globalState.selectedChar = data.selectedChar || globalState.characters[0];
+    globalState.records = data.records || {};
+    globalState.history = data.history || [];
+    globalState.configs = data.configs || {};
+    
+    // 현재 선택 캐릭터 유효성 점검
+    if(!globalState.characters.includes(globalState.selectedChar)) {
+      globalState.selectedChar = globalState.characters[0];
     }
+    
+    renderCharSelector();
+    syncUIFields();
+    render();
+  } else {
+    // 최초 실행 시 기본 스키마 클라우드 업로드
+    saveState();
+  }
+});
 
-    function addItemToBasket(name) {
-        const staff = document.getElementById('staff-name').value || "미지정";
-        const qty = Number(document.getElementById('item-qty-input').value) || 1;
-        const info = masterItems[name];
-        selectedBasket.push({ staff, itemName: name, price: Number(info.price || 0) * qty, category: info.category || "직원내수", timestamp: Date.now() });
-        renderBasket();
-        document.getElementById('autocomplete-box').style.display = 'none';
-        document.getElementById('item-search').value = '';
-    }
+function saveState() {
+  db.ref('tracker_state').set(globalState);
+}
 
-    function renderBasket() {
-        const display = document.getElementById('selected-items-display');
-        display.innerHTML = selectedBasket.map((item, idx) => `
-            <div class="added-item-tag">
-                <div><b>[${item.staff}]</b> ${item.itemName} (${item.category}) - ${Number(item.price).toLocaleString()}원</div>
-                <div style="cursor:pointer; color:red;" onclick="selectedBasket.splice(${idx},1); renderBasket();">✕</div>
-            </div>`).join('');
-        const total = selectedBasket.reduce((s, c) => s + Number(c.price || 0), 0);
-        document.getElementById('total-amount').innerText = total.toLocaleString();
-    }
+function syncUIFields() {
+  const char = globalState.selectedChar;
+  const cfg = globalState.configs[char] || { startTime: "10:10", initBalance: "" };
+  $('startTime').value = cfg.startTime || "10:10";
+  $('initBalance').value = cfg.initBalance || "";
+}
 
-    function submitLog() {
-        if(selectedBasket.length === 0) return alert("데이터 없음");
-        selectedBasket.forEach(i => db.ref('logs').push(i));
-        selectedBasket = []; renderBasket(); alert("저장 완료!");
-    }
+function updateLiveConfig() {
+  const char = globalState.selectedChar;
+  if(!globalState.configs[char]) globalState.configs[char] = {};
+  globalState.configs[char].startTime = $('startTime').value;
+  globalState.configs[char].initBalance = parseInt($('initBalance').value) || 0;
+  saveState();
+}
 
-    // 내역 보기 (분류별 요약 복구)
-    function renderHistory(logs) {
-        const container = document.getElementById('history-container');
-        const groups = {};
-        Object.values(logs).forEach(l => {
-            if(!groups[l.staff]) {
-                groups[l.staff] = { items: [], total: 0, catTotals: {} };
-                categories.forEach(c => groups[l.staff].catTotals[c] = 0);
-            }
-            groups[l.staff].items.push(l);
-            const p = Number(l.price || 0);
-            groups[l.staff].total += p;
-            groups[l.staff].catTotals[l.category || "직원내수"] += p;
-        });
+// ── 캐릭터/닉네임 제어 로직 ──
+function renderCharSelector() {
+  const select = $('charSelect');
+  select.innerHTML = globalState.characters.map(c => `<option value="${c}" ${c === globalState.selectedChar ? 'selected' : ''}>${c}</option>`).join('');
+}
 
-        let html = '';
-        Object.entries(groups).forEach(([staff, data]) => {
-            html += `<div class="staff-group">
-                <div class="staff-header"><b>👤 ${staff}님 정산 요약</b></div>
-                <table class="summary-table">
-                    <tr>${categories.map(c => `<th>${c}</th>`).join('')} <th style="background:#2563eb; color:#fff;">총합계</th></tr>
-                    <tr>${categories.map(c => `<td>${data.catTotals[c].toLocaleString()}</td>`).join('')} <td>${data.total.toLocaleString()}원</td></tr>
-                </table>
-                <table>
-                    <thead><tr><th>분류</th><th>품목</th><th>금액</th></tr></thead>
-                    <tbody>${data.items.map(i => `<tr><td>${i.category || '미분류'}</td><td>${i.itemName}</td><td>${Number(i.price || 0).toLocaleString()}원</td></tr>`).join('')}</tbody>
-                </table>
-            </div>`;
-        });
-        container.innerHTML = html || '<p>내역이 없습니다.</p>';
-    }
+function switchCharacter(charName) {
+  globalState.selectedChar = charName;
+  saveState();
+}
 
-    // 기타 관리
-    function resetLogs() { if(confirm("초기화하시겠습니까?")) db.ref('logs').remove(); }
-    function exportToExcel() {
-        const data = Object.values(currentLogs).map(l => ({ "날짜": new Date(l.timestamp).toLocaleString(), "직원": l.staff, "분류": l.category, "품목": l.itemName, "금액": l.price }));
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "정산");
-        XLSX.writeFile(wb, "정산백업.xlsx");
+function openCharModal() {
+  $('charModal').style.display = 'flex';
+  renderModalCharList();
+}
+
+function closeCharModal() {
+  $('charModal').style.display = 'none';
+}
+
+function renderModalCharList() {
+  const listContainer = $('modalCharList');
+  listContainer.innerHTML = globalState.characters.map(c => `
+    <div class="char-list-item">
+      <span>${c}</span>
+      <div class="char-actions">
+        <button class="btn-mini edit" onclick="editCharacterName('${c}')">수정</button>
+        <button class="btn-mini del" onclick="deleteCharacter('${c}')">삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addNewCharacter() {
+  const name = $('newCharName').value.trim();
+  if(!name) return;
+  if(globalState.characters.includes(name)) { alert('이미 존재하는 닉네임입니다.'); return; }
+  globalState.characters.push(name);
+  $('newCharName').value = '';
+  saveState();
+  renderModalCharList();
+}
+
+function editCharacterName(oldName) {
+  const newName = prompt(`[${oldName}]의 변경할 새 닉네임을 입력하세요:`, oldName);
+  if(!newName || !newName.trim() || oldName === newName.trim()) return;
+  const trimmed = newName.trim();
+  if(globalState.characters.includes(trimmed)) { alert('이미 존재하는 닉네임입니다.'); return; }
+  
+  // 데이터 이전 프로세스
+  const idx = globalState.characters.indexOf(oldName);
+  if(idx !== -1) globalState.characters[idx] = trimmed;
+  if(globalState.records[oldName]) { globalState.records[trimmed] = globalState.records[oldName]; delete globalState.records[oldName]; }
+  if(globalState.configs[oldName]) { globalState.configs[trimmed] = globalState.configs[oldName]; delete globalState.configs[oldName]; }
+  if(globalState.selectedChar === oldName) globalState.selectedChar = trimmed;
+  
+  saveState();
+  renderModalCharList();
+}
+
+function deleteCharacter(charName) {
+  if(globalState.characters.length <= 1) { alert('최소 하나의 캐릭터 닉네임은 존재해야 합니다.'); return; }
+  if(!confirm(`[${charName}] 캐릭터와 당일 기록 데이터를 삭제할까요? (정산 히스토리는 유지)`)) return;
+  
+  globalState.characters = globalState.characters.filter(c => c !== charName);
+  delete globalState.records[charName];
+  delete globalState.configs[charName];
+  if(globalState.selectedChar === charName) globalState.selectedChar = globalState.characters[0];
+  
+  saveState();
+  renderModalCharList();
+}
+
+// ── 체크포인트 비즈니스 로직 ──
+function getActiveCharRecords() {
+  return globalState.records[globalState.selectedChar] || [];
+}
+
+function addCheckpoint() {
+  const curBal = parseInt($('curBalance').value);
+  if (isNaN(curBal)) { $('curBalance').focus(); return; }
+  
+  const char = globalState.selectedChar;
+  const recs = getActiveCharRecords();
+  const endTime = nowTime();
+  
+  const cfg = globalState.configs[char] || {};
+  const startT = recs.length === 0 ? (cfg.startTime || nowTime()) : recs[recs.length-1].endTime;
+  const prevBal = recs.length === 0 ? (cfg.initBalance || 0) : recs[recs.length-1].balance;
+  
+  const mins = timeDiffMin(startT, endTime);
+  const profit = curBal - prevBal;
+  const hourly = mins > 0 ? Math.round((profit / mins) * 60) : 0;
+  const skip = hourly > 400000; // 기준 초과 아이템 판매 보정 필터식 유지
+
+  if(!globalState.records[char]) globalState.records[char] = [];
+  globalState.records[char].push({
+    no: recs.length + 1, startTime: startT, endTime, mins, profit, balance: curBal, hourly, skip
+  });
+  
+  $('curBalance').value = '';
+  $('curBalance').focus();
+  saveState();
+}
+
+// ── 렌더링 엔진 코어 ──
+function render() {
+  const recs = getActiveCharRecords();
+  const active = recs.filter(r => !r.skip);
+  const totalMins = active.reduce((s,r) => s+r.mins, 0);
+  const totalProfit = active.reduce((s,r) => s+r.profit, 0);
+  const hourly = totalMins > 0 ? Math.round((totalProfit/totalMins)*60) : 0;
+
+  $('statTime').textContent = totalMins + '분';
+  $('statProfit').textContent = fmt(totalProfit);
+  $('statProfit').className = 'stat-val ' + (totalProfit >= 0 ? 'pos' : 'neg');
+  $('statHourly').textContent = fmt(hourly);
+  $('statHourly').className = 'stat-val ' + (hourly >= 0 ? 'pos' : 'neg');
+
+  renderChart(recs);
+
+  // 테이블 데이터 처리
+  const tbody = $('tbody');
+  if (recs.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">체크포인트를 찍으면 여기에 기록돼요</td></tr>';
+  } else {
+    tbody.innerHTML = [...recs].reverse().map(r => {
+      const cls = r.skip ? 'skip' : r.profit < 0 ? 'neg' : '';
+      const badge = r.skip ? '<span class="badge badge-skip">아이템판매</span>' : r.profit < 0 ? '<span class="badge badge-neg">손실</span>' : '';
+      return `<tr class="${cls}">
+        <td>${r.startTime}→${r.endTime}${badge}</td>
+        <td>${r.mins}</td>
+        <td>${r.skip ? '-' : (r.profit >= 0 ? '+' : '') + fmt(r.profit)}</td>
+        <td>${r.skip ? '-' : fmt(r.hourly)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // 총계 및 정산 페이지 업데이트 호출
+  renderTotalSummaryPage();
+}
+
+function renderChart(recs) {
+  const bars = $('chartBars');
+  if (!recs.length) {
+    bars.innerHTML = '<div style="width:100%;text-align:center;color:var(--gray-400);font-size:13px;align-self:center">기록 없음</div>';
+    return;
+  }
+  const active = recs.filter(r => !r.skip);
+  const maxAbs = Math.max(1, ...active.map(r => Math.abs(r.profit)));
+  bars.innerHTML = recs.map(r => {
+    if (r.skip) return `<div class="bar-col"><div class="bar skip" style="height:20px"></div><div class="bar-lbl">${r.endTime}</div></div>`;
+    const h = Math.max(3, Math.round((Math.abs(r.profit)/maxAbs)*66));
+    return `<div class="bar-col"><div class="bar ${r.profit<0?'neg':'pos'}" style="height:${h}px"></div><div class="bar-lbl">${r.endTime}</div></div>`;
+  }).join('');
+}
+
+// ── 2. 전 캐릭터 정산(총계) 계산 및 렌더링 ──
+function renderTotalSummaryPage() {
+  let allProfit = 0;
+  let allMins = 0;
+  let rowsHTML = "";
+
+  globalState.characters.forEach(char => {
+    const recs = globalState.records[char] || [];
+    const active = recs.filter(r => !r.skip);
+    const totalMins = active.reduce((s,r) => s+r.mins, 0);
+    const totalProfit = active.reduce((s,r) => s+r.profit, 0);
+    const hourly = totalMins > 0 ? Math.round((totalProfit/totalMins)*60) : 0;
+
+    allProfit += totalProfit;
+    allMins += totalMins;
+
+    rowsHTML += `
+      <tr>
+        <td style="text-align:left; font-weight:600;">${char}</td>
+        <td>${totalMins}분</td>
+        <td class="${totalProfit >= 0 ? 'pos' : 'neg'}" style="font-weight:600; color:${totalProfit >= 0 ? 'var(--green-dark)' : 'var(--red-dark)'}">
+          ${totalProfit >= 0 ? '+' : ''}${fmt(totalProfit)}
+        </td>
+        <td>${fmt(hourly)}</td>
+      </tr>
+    `;
+  });
+
+  $('allCharTotalProfit').textContent = (allProfit >= 0 ? '+' : '') + fmt(allProfit);
+  $('allCharTotalMins').textContent = `총 플레이 타임: ${allMins}분`;
+  $('totalSummaryBbody').innerHTML = rowsHTML || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--gray-500)">활성화된 캐릭터가 없습니다.</td></tr>';
+}
+
+// ── 4. 전 캐릭터 일괄 마감 처리 기능 ──
+function closeAllDays() {
+  // 기록이 존재하는 유효 캐릭터 검증
+  let hasAnyRecord = false;
+  globalState.characters.forEach(char => {
+    if(globalState.records[char] && globalState.records[char].length > 0) hasAnyRecord = true;
+  });
+
+  if (!hasAnyRecord) { alert('마감할 당일 기록 데이터가 존재하지 않습니다.'); return; }
+  if (!confirm('현재 운영 중인 모든 캐릭터의 기록을 일괄 마감할까요?\n합산 통계 데이터가 추출되어 히스토리 탭에 누적 기록됩니다.')) return;
+
+  let totalMins = 0;
+  let totalProfit = 0;
+  let summaryDetails = [];
+
+  globalState.characters.forEach(char => {
+    const recs = globalState.records[char] || [];
+    if(recs.length === 0) return;
+
+    const active = recs.filter(r => !r.skip);
+    const cMins = active.reduce((s,r) => s+r.mins, 0);
+    const cProfit = active.reduce((s,r) => s+r.profit, 0);
+    
+    totalMins += cMins;
+    totalProfit += cProfit;
+
+    summaryDetails.push({
+      charName: char,
+      mins: cMins,
+      profit: cProfit,
+      intervals: recs.length
+    });
+  });
+
+  const hourly = totalMins > 0 ? Math.round((totalProfit / totalMins) * 60) : 0;
+
+  // 전체 통합 정산 오브젝트 구조 정의
+  const historyEntry = {
+    date: today(),
+    startTime: nowTime(), // 일괄 정산 시점 마킹용
+    endTime: nowTime(),
+    initBalance: 0, 
+    finalBalance: 0,
+    totalMins, 
+    totalProfit, 
+    hourly,
+    dailyRate: hourly * 24,
+    isBulk: true, // 통합 일괄 정산 플래그값 추가
+    summaryDetails,
+    records: [] 
+  };
+
+  if(!globalState.history) globalState.history = [];
+  globalState.history.unshift(historyEntry);
+  
+  // 데이터 클렌징 처리
+  globalState.records = {};
+  globalState.characters.forEach(char => {
+    if(globalState.configs[char]) {
+      globalState.configs[char].startTime = nowTime();
+      globalState.configs[char].initBalance = "";
     }
-    function openTab(id) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active'); if(event) event.currentTarget.classList.add('active');
-    }
-    function regItem() {
-        const name = document.getElementById('new-item-name').value;
-        const price = Number(document.getElementById('new-item-price').value || 0);
-        const category = document.getElementById('new-item-category').value;
-        if(name) db.ref('items/' + name).set({ price, category });
-    }
-    function renderMasterList() {
-        let html = '<table><tr><th>분류</th><th>품목</th><th>단가</th><th>삭제</th></tr>';
-        Object.entries(masterItems).forEach(([n, d]) => {
-            html += `<tr><td>${d.category}</td><td>${n}</td><td>${(d.price || 0).toLocaleString()}</td><td><button onclick="db.ref('items/${n}').remove()">삭제</button></td></tr>`;
-        });
-        document.getElementById('master-item-list').innerHTML = html + '</table>';
-    }
+  });
+
+  saveState();
+  showPage('history');
+}
+
+// ── 개별 작업 편의 액션 ──
+function undoLast() {
+  const char = globalState.selectedChar;
+  if (!globalState.records[char] || !globalState.records[char].length) return;
+  globalState.records[char].pop();
+  saveState();
+}
+
+function resetToday() {
+  if (!confirm(`현재 캐릭터 [${globalState.selectedChar}]의 당일 데이터를 초기화할까요?`)) return;
+  globalState.records[globalState.selectedChar] = [];
+  saveState();
+}
+
+function exportCSV() {
+  const recs = getActiveCharRecords();
+  const rows = [['구간','소요(분)','수익','잔액','시간당','비고']];
+  recs.forEach(r => rows.push([
+    `${r.startTime}→${r.endTime}`, r.mins, r.profit, r.balance,
+    r.skip ? '생략' : r.hourly, r.skip ? '아이템판매' : r.profit < 0 ? '손실' : ''
+  ]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `게임머니_${globalState.selectedChar}_${today()}.csv`;
+  a.click();
+}
+
+// ── 3. 히스토리 뷰어 로직 ──
+function renderHistory() {
+  const list = $('histList');
+  const detail = $('histDetail');
+  detail.style.display = 'none';
+  list.style.display = 'block';
+
+  if (!globalState.history || !globalState.history.length) {
+    list.innerHTML = `<div class="no-data"><div class="no-data-icon">📅</div><div class="no-data-text">마감한 데이터가 쌓이는 공간입니다.</div></div>`;
+    return;
+  }
+
+  const totalDays = globalState.history.length;
+  const totalProfit = globalState.history.reduce((s,h) => s+h.totalProfit, 0);
+  const avgHourly = Math.round(globalState.history.reduce((s,h) => s+h.hourly, 0) / totalDays);
+  const maxProfit = Math.max(1, ...globalState.history.map(h => Math.abs(h.totalProfit)));
+
+  list.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-title">전체 누적 수익</div>
+      <div class="summary-val">${totalProfit >= 0 ? '+' : ''}${fmt(totalProfit)}</div>
+      <div class="summary-sub">총 ${totalDays}회 마감 정산 누적</div>
+      <div class="summary-grid">
+        <div class="summary-item"><div class="summary-item-label">평균 시간당</div><div class="summary-item-val">${fmt(avgHourly)}</div></div>
+        <div class="summary-item"><div class="summary-item-label">하루 예상</div><div class="summary-item-val">${fmt(avgHourly * 24)}</div></div>
+      </div>
+    </div>
+    ${globalState.history.map((h, i) => {
+      const isPos = h.totalProfit >= 0;
+      const barW = Math.round((Math.abs(h.totalProfit) / maxProfit) * 100);
+      const subText = h.isBulk ? `[일괄통합정산] 참여 캐릭터 수: ${h.summaryDetails ? h.summaryDetails.length : 0}개` : `${h.startTime} ~ ${h.endTime}`;
+      return `<div class="day-card" onclick="showDetail(${i})">
+        <div class="day-top">
+          <div>
+            <div class="day-date">${h.date}</div>
+            <div class="day-meta">${subText} · ${h.totalMins}분</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="day-profit ${isPos?'pos':'neg'}" style="color:${isPos ? 'var(--green-dark)' : 'var(--red-dark)'}">${isPos?'+':''}${fmt(h.totalProfit)}</div>
+            <div style="color:var(--gray-400);">›</div>
+          </div>
+        </div>
+        <div class="day-bar-wrap"><div class="day-bar ${isPos?'pos':'neg'}" style="width:${barW}%"></div></div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function showDetail(idx) {
+  const h = globalState.history[idx];
+  const list = $('histList');
+  const detail = $('histDetail');
+  list.style.display = 'none';
+  detail.style.display = 'block';
+
+  let bodyContentHTML = "";
+
+  if (h.isBulk && h.summaryDetails) {
+    bodyContentHTML = `
+      <div class="card-label">일괄 마감 세부 캐릭터 내역</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>닉네임</th><th>플레이 타임</th><th>기록수익</th></tr></thead>
+          <tbody>${h.summaryDetails.map(c => `<tr><td style="text-align:left; font-weight:600;">${c.charName}</td><td>${c.mins}분</td><td style="font-weight:600;">${c.profit >= 0 ? '+' : ''}${fmt(c.profit)}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    bodyContentHTML = `<div class="table-wrap"><table><thead><tr><th>구간</th><th>분</th><th>수익</th></tr></thead><tbody><tr class="empty-row"><td colspan="3">개별 마감 상세 내역 데이터가 없습니다.</td></tr></tbody></table></div>`;
+  }
+
+  detail.innerHTML = `
+    <div class="detail-header">
+      <button class="back-btn" onclick="backToList()">‹ 뒤로가기</button>
+      <div class="detail-title">${h.date} 상세 정산 리포트</div>
+    </div>
+    <div class="scroll-content">
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-label">총 가동시간</div><div class="stat-val">${h.totalMins}분</div></div>
+        <div class="stat"><div class="stat-label">총 수익</div><div class="stat-val ${h.totalProfit>=0?'pos':'neg'}">${fmt(h.totalProfit)}</div></div>
+        <div class="stat"><div class="stat-label">통합 시간당</div><div class="stat-val ${h.hourly>=0?'pos':'neg'}">${fmt(h.hourly)}</div></div>
+      </div>
+      ${bodyContentHTML}
+      <div class="btn-row">
+        <button class="btn-sm danger" onclick="deleteHistoryDay(${idx})">🗑 이 리포트 삭제</button>
+      </div>
+    </div>
+  `;
+}
+
+function backToList() {
+  $('histDetail').style.display = 'none';
+  $('histList').style.display = 'block';
+}
+
+function deleteHistoryDay(idx) {
+  if (!confirm('이 히스토리 기록을 영구히 삭제할까요?')) return;
+  globalState.history.splice(idx, 1);
+  saveState();
+  renderHistory();
+}
+
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  $('page-' + p).classList.add('active');
+  $('tab-' + p).classList.add('active');
+  if (p === 'history') renderHistory();
+}
 </script>
 </body>
 </html>
